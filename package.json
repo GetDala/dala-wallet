@@ -1,0 +1,12 @@
+{
+  "name": "dala-wallet",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:GetDala/dala-wallet.git",
+  "author": "Ross McEwan <rossmcewan@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "truffle-hdwallet-provider": "^0.0.3",
+    "zeppelin-solidity": "^1.5.0"
+  }
+}
