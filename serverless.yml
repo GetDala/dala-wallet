@@ -1,0 +1,38 @@
+service: dala-wallet-api
+package: 
+  include:
+    - src/**
+
+provider:
+  name: aws
+  stage: ${opt:stage, self:custom.defaultStage}
+  profile: ${opt:profile}
+  region: eu-west-1
+  runtime: nodejs6.10
+  environment:
+  iamRoleStatements:
+
+functions:
+  #dynamodb stream listeners
+  onDalaTokenEvent:
+    handler: src/events/listeners.onDalaTokenEvent
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DalaTokenEventsDynamoDbTable
+              - StreamArn
+  #api endpoints
+  registerUser:
+    handler: src/users/handler.register
+    events:
+      - http:
+          path: v1/users
+          method: post
+          cors: true
+
+
+resources:
+  Resources:
+    DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
