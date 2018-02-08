@@ -6,7 +6,6 @@ from microraiden.click_helpers import main, pass_app
 from microraiden.make_helpers import make_paywalled_proxy
 from microraiden.proxy.resources import Expensive
 
-
 class PaywalledTeapot(Expensive):
     def get(self, url):
         return "HI I AM A TEAPOT", 418

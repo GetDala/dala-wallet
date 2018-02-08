@@ -50,8 +50,8 @@ uraiden.loadChannelFromBlockchain(secret.microraiden.sender, secret.microraiden.
     }
 
     function next(channel){
-        request('http://localhost:5000/api/1/stats', { json: true }, (error, response, body) => {
-            uraiden.signNewProof({ balance: new BigNumber(body.balance_sum) }).then(proof => {
+        request(`http://localhost:5000/api/1/channels/${secret.microraiden.sender}/${channel.block}`, { json: true }, (error, response, body) => {
+            uraiden.signNewProof({ balance: new BigNumber(body.balance) }).then(proof => {
                 uraiden.confirmPayment(proof);
                 doRequest(channel, proof);
             }).catch(console.log);
