@@ -59,3 +59,12 @@ typings/
 
 truffle.js
 secret.js
+private-key
+
+#microraiden
+dala_proxy.db
+dala_proxy.db.lock
+
+#python
+src/microraiden/__pycache__
+env
