@@ -78,8 +78,14 @@ function doRequest(channel, proof, headers) {
                 };
                 doRequest(channel, proof, headers);
             }).catch(error => {
-                console.log(error);
-            })
+                const errorString = error.toString();
+                if(errorString.startsWith('Error: Insuficient funds:')){
+                    return uraiden.topUpChannel(100).then(()=>{
+                        doRequest(channel, proof);
+                    });
+                }
+                console.log(error.toString());
+            });
         } else {
             console.log(response.statusCode);
             console.log(response.statusMessage);
