@@ -63,7 +63,8 @@ uraiden.loadChannelFromBlockchain(secret.microraiden.sender, secret.microraiden.
 
 function doRequest(channel, proof, headers) {
     headers = headers || {};
-    headers['Content-Type'] = 'application/json';
+    headers['content-type'] = 'application/json';
+    headers['Authorization'] = 'Basic cm9zczptY2V3YW4=';
     request('http://localhost:5000/users', { headers, method:'POST', body:JSON.stringify({'hello':'goodbye'}) }, (error, response, body) => {
         if (response.statusCode == 402) {
             console.log('payment required');

@@ -1,5 +1,6 @@
 import logging
 import requests
+import json
 from microraiden.click_helpers import main, pass_app
 from microraiden.proxy.resources import Expensive, PaywalledProxyUrl
 from flask import Response, make_response, request, render_template_string, jsonify
@@ -17,11 +18,15 @@ class PaywalledGoogle(PaywalledProxyUrl):
 
 class PaywalledRegisterUser(Expensive):
     def post(self, url):
-        print(request)
-        print(request.json)
-        print(request.data)
-        print(jsonify(request.headers.to_list()))
-        response = requests.post('https://a1mg72o6ng.execute-api.eu-west-1.amazonaws.com/dev/v1/users', json=request.json, headers={'value':'yes'})
+        headers = {
+            'Content-Type': request.headers.get('content-type'),
+            'Authorization': request.headers.get('Authorization')
+        }
+        # for key,value in request.headers.items():
+        #     headers[key] = value
+        print(headers)
+        response = requests.post('https://a1mg72o6ng.execute-api.eu-west-1.amazonaws.com/dev/v1/users', json=request.json, headers=headers)
+        print(response.headers, response.status_code)
         return response.json()
 
 @main.command()
