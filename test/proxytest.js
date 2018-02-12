@@ -65,6 +65,7 @@ function doRequest(channel, proof, headers) {
     headers = headers || {};
     headers['content-type'] = 'application/json';
     headers['Authorization'] = 'Basic cm9zczptY2V3YW4=';
+    headers['x-api-key'] = secret.microraiden.apiKey;
     request('http://localhost:5000/users', { headers, method:'POST', body:JSON.stringify({'hello':'goodbye'}) }, (error, response, body) => {
         if (response.statusCode == 402) {
             console.log('payment required');
