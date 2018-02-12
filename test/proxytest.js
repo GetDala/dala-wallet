@@ -1,3 +1,5 @@
+console.debug = console.log;
+
 const Web3 = require('web3');
 const ProviderEngine = require('web3-provider-engine');
 const WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
@@ -60,7 +62,9 @@ uraiden.loadChannelFromBlockchain(secret.microraiden.sender, secret.microraiden.
 }).catch(console.log);
 
 function doRequest(channel, proof, headers) {
-    request('http://localhost:5000/teapot', { headers }, (error, response, body) => {
+    headers = headers || {};
+    headers['Content-Type'] = 'application/json';
+    request('http://localhost:5000/users', { headers, method:'POST', body:JSON.stringify({'hello':'goodbye'}) }, (error, response, body) => {
         if (response.statusCode == 402) {
             console.log('payment required');
             uraiden.incrementBalanceAndSign(response.headers['rdn-price']).then(proof => {
@@ -89,6 +93,7 @@ function doRequest(channel, proof, headers) {
         } else {
             console.log(response.statusCode);
             console.log(response.statusMessage);
+            console.log(response.toJSON());
             console.log(body);
         }
     });

@@ -2,6 +2,10 @@ service: dala-wallet-api
 package: 
   include:
     - src/**
+  exclude:
+    - node_modules/**
+    - env/**
+    - microraiden/**
 
 provider:
   name: aws
@@ -32,6 +36,8 @@ functions:
           method: post
           cors: true
 
+custom:
+  defaultStage: dev
 
 resources:
   Resources:
