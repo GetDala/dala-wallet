@@ -39,13 +39,22 @@ function createEvent(error, event) {
 
     var putParams = {
         TableName: 'DalaTokenEvents',
-        Item: Object.assign({}, event, { id: event.transactionHash })
+        Item: Object.assign({}, event, { id: event.transactionHash }),
+        ConditionExpression: 'attribute_not_exists(#id)',
+        ExpressionAttributeNames: {
+            '#id':'id'
+        }
     }
 
     documentClient.put(putParams).promise().then(console.log).catch(handleFailed);
 
     function handleFailed(error) {
         console.log(error);
+        if(error.code === 'ConditionalCheckFailedException'){
+            //swallow
+        }else{
+            throw error;
+        }
         //what to do here
         //don't want to miss an event
         //give this some thought
