@@ -6,7 +6,7 @@ const WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js')
 const Web3Subprovider = require('web3-provider-engine/subproviders/web3.js');
 const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js');
 const AWS = require('aws-sdk');
-const documentClient = new AWS.DynamoDB.DocumentClient({region: 'eu-west-1'});
+const documentClient = new AWS.DynamoDB.DocumentClient({ region: 'eu-west-1' });
 
 const secret = require('../../secret');
 const RPC_SERVER = secret.rpcServer;
@@ -39,7 +39,7 @@ function createEvent(error, event) {
 
     var putParams = {
         TableName: 'DalaTokenEvents',
-        Item: event
+        Item: Object.assign({}, event, { id: event.transactionHash })
     }
 
     documentClient.put(putParams).promise().then(console.log).catch(handleFailed);
