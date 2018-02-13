@@ -5,10 +5,8 @@ const ProviderEngine = require('web3-provider-engine');
 const WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
 const Web3Subprovider = require('web3-provider-engine/subproviders/web3.js');
 const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js');
-
-// const AWS = require('aws-sdk');
-// AWS.config.update({ region: 'eu-west-1' });
-const DalaTokenEvent = require('../events/DalaTokenEvent');
+const AWS = require('aws-sdk');
+const documentClient = new AWS.DynamoDB.DocumentClient();
 
 const secret = require('../../secret');
 const RPC_SERVER = secret.rpcServer;
@@ -38,7 +36,13 @@ function createEvent(error, event) {
         console.log(error);
         return;
     }
-    return new DalaTokenEvent(event.id, 'new-event', event).save().catch(handleFailed);
+
+    var putParams = {
+        TableName: 'DalaTokenEvents',
+        Item: event
+    }
+
+    documentClient.put(putParams).promise().then(console.log).catch(handleFailed);
 
     function handleFailed(error) {
         console.log(error);
