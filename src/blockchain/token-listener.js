@@ -6,6 +6,10 @@ const WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js')
 const Web3Subprovider = require('web3-provider-engine/subproviders/web3.js');
 const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js');
 
+// const AWS = require('aws-sdk');
+// AWS.config.update({ region: 'eu-west-1' });
+const DalaTokenEvent = require('../events/DalaTokenEvent');
+
 const secret = require('../../secret');
 const RPC_SERVER = secret.rpcServer;
 const PRIVATE_KEY = secret.privateKey;
@@ -25,5 +29,21 @@ DalaToken.setProvider(engine);
 DalaToken.defaults({ from: secret.fromAddress, gas: secret.gas });
 
 DalaToken.at(TOKEN_ADDRESS).then(token => {
-    token.Transfer().watch(console.log);
+    token.Transfer().watch(createEvent);
 }).catch(console.log);
+
+function createEvent(error, event) {
+    console.log(event);
+    if (error) {
+        console.log(error);
+        return;
+    }
+    return new DalaTokenEvent(event.id, 'new-event', event).save().catch(handleFailed);
+
+    function handleFailed(error) {
+        console.log(error);
+        //what to do here
+        //don't want to miss an event
+        //give this some thought
+    }
+}

@@ -17,7 +17,8 @@
     "truffle-hdwallet-provider": "^0.0.3",
     "web3": "0.18.4",
     "web3-provider-engine": "^13.6.0",
-    "zeppelin-solidity": "^1.5.0"
+    "zeppelin-solidity": "^1.5.0",
+    "wala-common": "git+ssh://git@github.com/GetWala/wala-common.git#master"
   },
   "devDependencies": {
     "serverless": "^1.26.0"
