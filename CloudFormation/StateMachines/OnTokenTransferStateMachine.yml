@@ -1,0 +1,58 @@
+StateMachine:
+  Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Event Processing",
+        "States": {
+          #Update the event entry to have a status of 'PROCESSING'
+          "Event Processing":{
+            "Type":"Task",
+            "Resource":"",
+            "Retry":[
+
+            ],
+            "Catch":[
+
+            ],
+            "Next":"Sweep Tokens"
+          },
+          #Invoke the sweep function on the DalaWallet smart contract
+          "Sweep Tokens":{
+            "Type":"Task",
+            "Resource":"",
+            "Retry":[
+
+            ],
+            "Catch":[
+
+            ],
+            "Next":"Transfer"
+          },
+          #Transfer token balance from Dala pool account on ledger to user account on ledger
+          "Transfer":{
+            "Type":"Task",
+            "Resource":"",
+            "Retry":[
+
+            ],
+            "Catch":[
+
+            ],
+            "Next":"Event Complete"
+          },
+          #Update the event status to 'COMPLETED'
+          "Event Complete":{
+            "Type":"Task",
+            "Resource":"",
+            "Retry":[
+
+            ],
+            "Catch":[
+
+            ],
+            "End":true
+          }
+        }
+      }
+    RoleArn: arn:aws:iam::${self:custom.profiles.${self:provider.stage}.AWS_ACCOUNT_NUMBER}:role/service-role/StatesExecutionRole-${self:provider.region}

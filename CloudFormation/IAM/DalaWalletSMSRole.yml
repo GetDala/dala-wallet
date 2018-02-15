@@ -1,0 +1,27 @@
+Role:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: Allow
+          Principal:
+            Service:
+              - "cognito-idp.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+          Condition:
+            StringEquals:
+              "sts:ExternalId": "fcdb3d00-1220-11e8-b460-0b94ee62a26c"
+    Path: "/service-role/"
+    Policies:
+      -
+        PolicyName: DalaWalletSmsRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: Allow
+              Action: "sns:publish"
+              Resource: "*"

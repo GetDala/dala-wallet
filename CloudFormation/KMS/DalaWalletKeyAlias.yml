@@ -1,0 +1,6 @@
+Alias:
+  Type: AWS::KMS::Alias
+  Properties:
+    AliasName: alias/DalaWalletKey
+    TargetKeyId:
+      Ref: DalaWalletKeyKMS

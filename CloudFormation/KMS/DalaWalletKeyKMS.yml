@@ -1,0 +1,28 @@
+Key:
+  Type: AWS::KMS::Key
+  Properties:
+    Description: "KMS key for encryption of blockchain resources such as private key"
+    Enabled: true
+    KeyPolicy:
+      Version: '2012-10-17'
+      Id: 'dala-wallet-key'
+      Statement:
+        -
+          Sid: "Enable IAM User Permissions"
+          Effect: "Allow"
+          Principal: 
+            AWS: "arn:aws:iam::346209687917:root"
+          Action: "kms:*"
+          Resource: "*"
+        -
+          Sid: "Allow use of the key"
+          Effect: "Allow"
+          Principal: 
+            AWS: "arn:aws:iam::346209687917:role/dala-wallet-api-dev-eu-west-1-lambdaRole"
+          Action: 
+            - "kms:Encrypt"
+            - "kms:Decrypt"
+            - "kms:ReEncrypt*"
+            - "kms:GenerateDataKey*"
+            - "kms:DescribeKey"
+          Resource: "*"

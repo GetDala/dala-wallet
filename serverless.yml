@@ -1,11 +1,13 @@
 service: dala-wallet-api
 package: 
-  include:
-    - src/**
   exclude:
-    - node_modules/**
     - env/**
     - microraiden/**
+    - dala_proxy.db*
+    - private-key
+    - secret.js
+    - truffle.js
+
 
 provider:
   name: aws
@@ -14,7 +16,23 @@ provider:
   region: eu-west-1
   runtime: nodejs6.10
   environment:
+    CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
+    USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+    DEFAULT_GAS: ${self:custom.profiles.${self:provider.stage}.DEFAULT_GAS}
+  environmentSecrets:
+    PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
+    RPC_SERVER: '/${self:service}/${self:provider.stage}/RPC_SERVER'
+    FROM_ADDRESS: '/${self:service}/${self:provider.stage}/FROM_ADDRESS'
   iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cognito-idp:AdminCreateUser
+        - cognito-idp:AdminInitiateAuth
+        - cognito-idp:AdminRespondToAuthChallenge
+        - cognito-idp:AdminGetUser
+        - cognito-idp:AdminResetUserPassword
+      Resource:
+        - ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolArn.Value}
   apiKeys:
     - ${self:service}-${self:provider.stage}
 
@@ -22,6 +40,9 @@ functions:
   #dynamodb stream listeners
   onDalaTokenEvent:
     handler: src/events/listeners.onDalaTokenEvent
+    package:
+      include: 
+        - src/events/**
     events:
       - stream:
           type: dynamodb
@@ -29,9 +50,31 @@ functions:
             Fn::GetAtt:
               - DalaTokenEventsDynamoDbTable
               - StreamArn
+  #state machine steps
+  sweep:
+    handler: src/blockchain/token-sweeper.sweep
+    timeout: 30
+    package:
+      include:
+        - src/blockchain/token-sweeper.js
+        - lib/DalaWallet.json
   #api endpoints
+  authenticate:
+    handler: src/users/handler.authenticate
+    package: 
+      include:
+        - src/users/**
+    events:
+      - http:
+          path: v1/authentications
+          method: post
+          cors: true
+          private: true
   registerUser:
     handler: src/users/handler.register
+    package:
+      include:
+        - src/users/**
     events:
       - http:
           path: v1/users
@@ -39,9 +82,68 @@ functions:
           cors: true
           private: true
 
+plugins:
+  - serverless-secrets
+  - serverless-prune-plugin
+  - serverless-plugin-cfauthorizer
+
 custom:
+  prune:
+    automatic: true
+    number: 5
+  cfAuthorizers:
+    DalaWalletAuthorizer:
+      Type: COGNITO_USER_POOLS
+      Name: DalaUsers
+      IdentitySource: "method.request.header.Authorization"
+      ProviderARNs:
+        - ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolArn.Value}
   defaultStage: dev
+  profiles:
+    dev:
+      DEFAULT_GAS: 4500000
+  serverlessSecrets:
+    providerOptions:
+      region: ${self:provider.region}
+    keys:
+      default: ${self:resources.Outputs.DalaWalletKeyAliasName.Value}
 
 resources:
+  Outputs:
+    DalaWalletKeyAliasName:
+      Value:
+        Ref: DalaWalletKeyAlias
+    DalaWalletSMSRoleArn:
+      Value:
+        Fn::GetAtt:
+          - DalaWalletSMSRole
+          - Arn
+    CognitoUserPoolDalaWalletUserPoolId:
+      Value:
+        Ref: CognitoUserPoolDalaWalletUserPool
+    CognitoUserPoolDalaWalletUserPoolProviderName:
+      Value:
+        Fn::GetAtt:
+          - CognitoUserPoolDalaWalletUserPool
+          - ProviderName
+    CognitoUserPoolDalaWalletUserPoolProviderUrl:
+      Value:
+        Fn::GetAtt:
+          - CognitoUserPoolDalaWalletUserPool
+          - ProviderURL
+    CognitoUserPoolDalaWalletUserPoolArn:
+      Value:
+        Fn::GetAtt:
+          - CognitoUserPoolDalaWalletUserPool
+          - Arn
+    CognitoUserPoolDalaWalletUserPoolClientId:
+      Value: 
+        Ref: CognitoUserPoolDalaWalletUserPoolClient
   Resources:
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
+    DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
+    DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
+    DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
+    CognitoUserPoolDalaWalletUserPool: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPool.yml):UserPool}
+    CognitoUserPoolDalaWalletUserPoolClient: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPoolClient.yml):UserPoolClient}
+      
