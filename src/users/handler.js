@@ -18,7 +18,7 @@ module.exports.authenticate = (event, context, callback) => {
         console.log(result);
         return context.succeed({
             statusCode: 200,
-            body: JSON.stringify(result)
+            body: JSON.stringify(result.AuthenticationResult)
         });
     }).catch(error => {
         console.log(error);
@@ -36,25 +36,28 @@ module.exports.register = (event, context, callback) => {
         ForceAliasCreation: false,
         MessageAction: 'SUPPRESS',
         TemporaryPassword: password,
-        UserAttributes: [
-            {
-                Name: 'email',
-                Value: email
-            },
-            {
-                Name: 'phone_number',
-                Value: phoneNumber
-            },
-            {
-                Name: 'phone_number_verified',
-                Value: 'true'
-            },
-            {
-                Name: 'email_verified',
-                Value: 'true'
-            }
-        ]
+        UserAttributes: []
     };
+    if (email) {
+        createUserParams.UserAttributes.push({
+            Name: 'email',
+            Value: email
+        });
+        createUserParams.UserAttributes.push({
+            Name: 'email_verified',
+            Value: 'true'
+        });
+    }
+    if (phoneNumber) {
+        createUserParams.UserAttributes.push({
+            Name: 'phone_number',
+            Value: phoneNumber
+        });
+        createUserParams.UserAttributes.push({
+            Name: 'phone_number_verified',
+            Value: 'true'
+        });
+    }
 
     cognitoIdentityServiceProvider.adminCreateUser(createUserParams).promise().then(data => {
         console.log('create user response', data);
@@ -69,7 +72,6 @@ module.exports.register = (event, context, callback) => {
         };
         return cognitoIdentityServiceProvider.adminInitiateAuth(authRequest).promise();
     }).then(data => {
-        console.log('initiate auth response', data);
         if (data.ChallengeName == 'NEW_PASSWORD_REQUIRED') {
             let challengeRequest = {
                 ChallengeName: 'NEW_PASSWORD_REQUIRED',
@@ -86,7 +88,7 @@ module.exports.register = (event, context, callback) => {
     }).then(data => {
         return context.succeed({
             statusCode: 200,
-            body: JSON.stringify(data)
+            body: JSON.stringify(data.AuthenticationResult)
         });
     }).catch(context.fail);
 }

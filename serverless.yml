@@ -26,6 +26,15 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource:
+        - ${self:resources.Outputs.DalaWalletEventsDynamoDbTableArn.Value}
+    - Effect: Allow
+      Action:
         - cognito-idp:AdminCreateUser
         - cognito-idp:AdminInitiateAuth
         - cognito-idp:AdminRespondToAuthChallenge
@@ -51,14 +60,22 @@ functions:
               - DalaTokenEventsDynamoDbTable
               - StreamArn
   #state machine steps
-  sweep:
+  ethSweepWallet:
     handler: src/blockchain/token-sweeper.sweep
     timeout: 30
     package:
       include:
         - src/blockchain/token-sweeper.js
         - lib/DalaWallet.json
-  #api endpoints
+  ethCreateWallet:
+    handler: src/blockchain/dala-wallet.create
+    timeout: 30
+    package:
+      include:
+        - src/blockchain/dala-wallet.js
+        - src/blockchain/utils.js
+        - lib/DalaWallet.json
+  #api endpoints 
   authenticate:
     handler: src/users/handler.authenticate
     package: 
@@ -78,6 +95,17 @@ functions:
     events:
       - http:
           path: v1/users
+          method: post
+          cors: true
+          private: true
+  createWallet:
+    handler: src/wallets/handler.create
+    package:
+      include:
+        - src/wallets/handler.js
+    events:
+      - http:
+          path: v1/wallets
           method: post
           cors: true
           private: true
@@ -102,6 +130,9 @@ custom:
   profiles:
     dev:
       DEFAULT_GAS: 4500000
+      DESTINATION_ADDRESS: "0xDD86986bA67b4A1A8E7BE4833Dde2c09243333D7"
+      TOKEN_ADDRESS: "0x5d689a3de1a648f85d23231a2d95fa89ce3d41fc"
+      MIN_BALANCE: 50000000000000000000
   serverlessSecrets:
     providerOptions:
       region: ${self:provider.region}
@@ -110,6 +141,11 @@ custom:
 
 resources:
   Outputs:
+    DalaWalletEventsDynamoDbTableArn:
+      Value:
+        Fn::GetAtt:
+          - DalaWalletEventsDynamoDbTable
+          - Arn
     DalaWalletKeyAliasName:
       Value:
         Ref: DalaWalletKeyAlias
@@ -141,6 +177,7 @@ resources:
         Ref: CognitoUserPoolDalaWalletUserPoolClient
   Resources:
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
+    DalaWalletEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletEventsDynamoDbTable.yml):Table}
     DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
     DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
     DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 

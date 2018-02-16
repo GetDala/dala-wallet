@@ -1,0 +1,39 @@
+Table:
+  Type: AWS::DynamoDB::Table
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: id
+        AttributeType: S
+      -
+        AttributeName: entityId
+        AttributeType: S
+      -
+        AttributeName: timestamp
+        AttributeType: S
+    KeySchema:
+      -
+        AttributeName: id
+        KeyType: HASH
+    GlobalSecondaryIndexes:
+      -
+        IndexName: idx_dalaWalletEvents_entityId_timestamp
+        KeySchema:
+          -
+            AttributeName: entityId
+            KeyType: HASH
+          -
+            AttributeName: timestamp
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    ProvisionedThroughput:
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1
+    TableName: DalaWalletEvents
+    StreamSpecification:
+      StreamViewType: NEW_AND_OLD_IMAGES
