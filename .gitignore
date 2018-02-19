@@ -68,6 +68,7 @@ dala_proxy.db.lock
 #python
 src/microraiden/__pycache__
 env
+src/microraiden/config.ini
 
 #serverless
 .serverless

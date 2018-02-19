@@ -1,0 +1,39 @@
+Table:
+  Type: AWS::DynamoDB::Table
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: id
+        AttributeType: S
+      -
+        AttributeName: sender
+        AttributeType: S
+      -
+        AttributeName: timestamp
+        AttributeType: S
+    KeySchema:
+      -
+        AttributeName: id
+        KeyType: HASH
+    GlobalSecondaryIndexes:
+      -
+        IndexName: idx_dalaSubscribers_sender_timestamp
+        KeySchema:
+          -
+            AttributeName: sender
+            KeyType: HASH
+          -
+            AttributeName: timestamp
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    ProvisionedThroughput:
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1
+    TableName: DalaSubscribers
+    StreamSpecification:
+      StreamViewType: NEW_AND_OLD_IMAGES

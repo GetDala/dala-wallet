@@ -1,29 +1,53 @@
 import logging
 import requests
 import json
+import configparser
+import os
 from microraiden.click_helpers import main, pass_app
 from microraiden.proxy.resources import Expensive, PaywalledProxyUrl
 from flask import Response, make_response, request, render_template_string, jsonify
 
-class PaywalledRegisterUser(Expensive):
-    def post(self, url):
-        headers = {
+config = configparser.ConfigParser()
+config.read('src/microraiden/config.ini')
+env = os.environ.get('ENVIRONMENT', 'SANDBOX')
+
+baseUrl = config[env]['BASE_URL']
+
+class PaywalledResourceBase(Expensive):
+    def create_headers(request):
+        return {
             'Content-Type': request.headers.get('content-type'),
             'Authorization': request.headers.get('Authorization'),
-            'x-api-key': request.headers.get('x-api-key')
+            'x-api-key': request.headers.get('x-api-key'),
+            'x-sender-address': request.headers.get('RDN-Sender-Address')
         }
-        response = requests.post('https://a1mg72o6ng.execute-api.eu-west-1.amazonaws.com/dev/v1/users', json=request.json, headers=headers)
+
+
+class PaywalledRegisterUser(PaywalledResourceBase):
+    def post(self, url):
+        headers = self.create_headers(request)
+        # {
+        #     'Content-Type': request.headers.get('content-type'),
+        #     'Authorization': request.headers.get('Authorization'),
+        #     'x-api-key': request.headers.get('x-api-key'),
+        #     'x-sender-address': request.headers.get('RDN-Sender-Address')
+        # }
+        response = requests.post(baseUrl + '/v1/users', json=request.json, headers=headers)
         return response.json()
 
-class PaywalledAuthenticate(Expensive):
+class PaywalledAuthenticate(PaywalledResourceBase):
     def post(self, url):
-        headers = {
-            'Content-Type': request.headers.get('content-type'),
-            'Authorization': request.headers.get('Authorization'),
-            'x-api-key': request.headers.get('x-api-key')
-        }
-        response = requests.post('https://a1mg72o6ng.execute-api.eu-west-1.amazonaws.com/dev/v1/authentications', json=request.json, headers=headers)
+        headers = self.create_headers(request)
+        # {
+        #     'Content-Type': request.headers.get('content-type'),
+        #     'Authorization': request.headers.get('Authorization'),
+        #     'x-api-key': request.headers.get('x-api-key'),
+        #     'x-sender-address': request.headers.get('RDN-Sender-Address')
+        # }
+        response = requests.post(baseUrl + '/v1/authentications', json=request.json, headers=headers)
         return response.json()
+
+
 
 @main.command()
 @pass_app

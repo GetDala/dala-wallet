@@ -1,0 +1,24 @@
+Role:
+  Type: AWS::IAM::Role
+  Properties:
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: Allow
+          Principal:
+            Service:
+              - "states.eu-west-1.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+    Path: "/service-role/"
+    Policies:
+      -
+        PolicyName: DalaWalletStateMachineExecutionRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Effect: Allow
+              Action: "lambda:InvokeFunction"
+              Resource: "*"

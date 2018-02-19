@@ -1,0 +1,85 @@
+StateMachine:
+  Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Processing",
+        "States":[
+          {
+            #Update status to processing
+            "Processing":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Catch":[
+
+              ],
+              "Next":"Create Wallet On Chain"
+            },
+            #Execute the create wallet transaction on the blockchain
+            "Create Wallet On Chain":{
+
+            },
+            #Check blockchain transaction status
+            "Check Transaction Status":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Catch":[
+                #TransactionNotCompleteError -> Wait 10s and try again
+                #TransactionFailedError -> Event Failed
+              ],
+              "Next":"Update Wallet Address"
+            },
+            #Wait 10s and check blockchain transaction status again
+            "Wait":{
+              "Type":"Wait",
+              "Next":"Check Transaction Status"
+            },
+            #Update wallet address
+            "Update Wallet Address":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Next":"Successful"
+            },
+            #Update status to successful
+            "Successful":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Next":"Notify Success"
+            },
+            #Update event status to failed
+            "Failed":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Next":"Notify Failure"
+            },
+            "Notify Success":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[],
+              "End":true
+            },
+            "Notify Failure":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[],
+              "End":true
+            }
+          }
+        ]
+      }
+    RoleArn: {self:resources.Outputs.DalaWalletStateMachineExecutionRoleArn.Value}

@@ -22,7 +22,7 @@ module.exports.create = (event, context, callback) => {
             minBalance: MIN_BALANCE,
             data: contract.bytecode
         };
-    }).then(({ wallet, from, gas, destination, token, minBalance }) => {
+    }).then(({ wallet, from, gas, destination, token, minBalance, data }) => {
         return new Promise((resolve, reject) => {
             return wallet.new(destination, token, minBalance, { from, gas, data }, (error, contract) => {
                 if (error) return reject(error);

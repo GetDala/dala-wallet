@@ -1,14 +1,17 @@
 'use strict';
 
-const EventTypes = require('./constants').EventTypes;
+const 
+const EventTypes = require('../common/constants').EventTypes;
 const CognitoUtils = require('../lib/CognitoUtils');
-const DalaWalletEvent = require('./DalaWalletEvent');
+const DalaWalletEvent = require('../model/DalaWalletEvent');
 
 module.exports.create = (event, context, callback) => {
     const sub = CognitoUtils.getSubFromEvent(event);
-    const payload = JSON.parse(event.body);
-    const eventType = EventTypes.Create;
-    const walletEvent = new DalaWalletEvent(sub, eventType, payload, Object.assign({}, context));
+    const username = CognitoUtils.getUsernameFromEvent(event);
+    const body = JSON.parse(event.body);
+    const payload = Object.assign({}, body, {username});
+    const eventType = EventTypes.CreateWallet;
+    const walletEvent = new DalaWalletEvent(username, eventType, payload, Object.assign({}, context));
 
     return walletEvent.save().then(result=>{
         const response = {

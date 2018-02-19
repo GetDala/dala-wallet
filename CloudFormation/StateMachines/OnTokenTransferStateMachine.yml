@@ -55,4 +55,4 @@ StateMachine:
           }
         }
       }
-    RoleArn: arn:aws:iam::${self:custom.profiles.${self:provider.stage}.AWS_ACCOUNT_NUMBER}:role/service-role/StatesExecutionRole-${self:provider.region}
+    RoleArn: {self:resources.Outputs.DalaWalletStateMachineExecutionRoleArn.Value}

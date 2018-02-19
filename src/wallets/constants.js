@@ -1,5 +1,7 @@
 'use strict';
 
-module.exports.EventTypes = {
-    Create: 'dala-wallet:create'
+module.exports.Statuses = {
+    Processing: 'PROCESSING',
+    Created: 'CREATED',
+    Failed: 'FAILED'
 }

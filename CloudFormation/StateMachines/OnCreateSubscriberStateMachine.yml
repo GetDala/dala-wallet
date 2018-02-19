@@ -1,0 +1,41 @@
+Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Event Processing",
+        "States":[
+          {
+            #Update event status to processing
+            "Processing":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Catch":[
+
+              ],
+              "Next":"Create Subscriber"
+            },
+            "Create Subscriber":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Next":"Event Complete"
+            },
+            "Complete":{
+              "Type":"Task",
+              "Resource":"",
+              "Retry":[
+
+              ],
+              "Catch":[
+
+              ],
+              "End":true
+            }
+          }
+      }
+    RoleArn: {self:resources.Outputs.DalaWalletStateMachineExecutionRoleArn.Value}

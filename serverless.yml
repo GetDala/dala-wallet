@@ -48,16 +48,28 @@ provider:
 functions:
   #dynamodb stream listeners
   onDalaTokenEvent:
-    handler: src/events/listeners.onDalaTokenEvent
+    handler: src/token/listeners.onDalaTokenEvent
     package:
       include: 
-        - src/events/**
+        - src/token/**
     events:
       - stream:
           type: dynamodb
           arn:
             Fn::GetAtt:
               - DalaTokenEventsDynamoDbTable
+              - StreamArn
+  onDalaWalletEvent:
+    handler: src/common/listeners.onDalaWalletEvent
+    package: 
+      include:
+        - src/common/**
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DalaWalletEventsDynamoDbTable
               - StreamArn
   #state machine steps
   ethSweepWallet:
@@ -103,9 +115,22 @@ functions:
     package:
       include:
         - src/wallets/handler.js
+        - src/common/**
     events:
       - http:
           path: v1/wallets
+          method: post
+          cors: true
+          private: true
+  createSubscriber:
+    handler: src/subscribers/handler.create
+    package:
+      include: 
+        - src/subscribers/handler.js
+        - src/common/**
+    events:
+      - http:
+          path: v1/subscribers
           method: post
           cors: true
           private: true
@@ -141,6 +166,11 @@ custom:
 
 resources:
   Outputs:
+    DalaWalletStateMachineExecutionRoleArn:
+      Value:
+        Fn::GetAtt:
+          - DalaWalletStateMachineExecutionRole
+          - Arn
     DalaWalletEventsDynamoDbTableArn:
       Value:
         Fn::GetAtt:
@@ -176,11 +206,18 @@ resources:
       Value: 
         Ref: CognitoUserPoolDalaWalletUserPoolClient
   Resources:
+    DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
     DalaWalletEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletEventsDynamoDbTable.yml):Table}
+    DalaWalletsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletsDynamoDbTable.yml):Table}
+    DalaSubscribersDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaSubscribersDynamoDbTable.yml):Table}
     DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
     DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
     DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
     CognitoUserPoolDalaWalletUserPool: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPool.yml):UserPool}
     CognitoUserPoolDalaWalletUserPoolClient: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPoolClient.yml):UserPoolClient}
+    DalaWalletStatusSNSTopic: ${file(./CloudFormation/SNS/DalaWalletStatusSNSTopic.yml):Topic}
+    DalaWalletDepositSNSTopic: ${file(./CloudFormation/SNS/DalaWalletDepositSNSTopic.yml):Topic}
+    DalaWalletWithdrawalSNSTopic: ${file(./CloudFormation/SNS/DalaWalletWithdrawalSNSTopic.yml):Topic}
+    DalaWalletTransfeSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
       

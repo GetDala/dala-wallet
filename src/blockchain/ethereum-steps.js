@@ -11,10 +11,20 @@ class TransactionFailedError extends Error {
      * @param {string} message Message
      * @param {Object} transaction The Ethereum transaction
      */
-    constructor(message, transaction){
+    constructor(message, transaction) {
         super(message);
         this.transaction = transaction;
         this.name = 'TransactionFailedError';
+    }
+}
+
+class TransactionNotCompleteError extends Error {
+    /**
+     * @param {string} message Message
+     */
+    constructor(message) {
+        super(message);
+        this.name = 'TransactionNotCompleteError';
     }
 }
 
@@ -26,10 +36,11 @@ module.exports.isTransactionSuccessful = (event, context, callback) => {
         const web3 = new Web3(engine);
         web3.eth.getTransactionReceipt(transactionHash, (error, transaction) => {
             if (error) return context.fail(error);
+            if (!transaction) return context.fail(new TransactionNotCompleteError('TransactionNotComplete'));
             const { status } = transaction;
-            if(status === 1){
+            if (status === 1) {
                 return context.succeed(transaction);
-            }else{
+            } else {
                 return context.fail(new TransactionFailedError('TransactionFailed', transaction));
             }
         });
