@@ -14,6 +14,7 @@ provider:
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${opt:profile}
   region: eu-west-1
+  accountId: #{AWS::AccountId}
   runtime: nodejs6.10
   environment:
     CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
@@ -72,6 +73,11 @@ functions:
               - DalaWalletEventsDynamoDbTable
               - StreamArn
   #state machine steps
+  ethGetTransactionReceipt:
+    handler: src/blockchain/ethereum-steps.getTransactionReceipt
+    package:
+      include:
+        - src/blockchain/ethereum-steps.js
   ethSweepWallet:
     handler: src/blockchain/token-sweeper.sweep
     timeout: 30
@@ -87,6 +93,54 @@ functions:
         - src/blockchain/dala-wallet.js
         - src/blockchain/utils.js
         - lib/DalaWallet.json
+  walletProcessing:
+    handler: src/wallets/steps.walletProcessing
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  walletFailed:
+    handler: src/wallets/steps.walletFailed
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  walletCreated:
+    handler: src/wallets/steps.walletCreated
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  updateWalletAddress:
+    handler: src/wallets/steps.updateWalletAddress
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  subscribe:
+    handler: src/subscribers/steps.subscribe
+    package:
+      include:
+        - src/subscribers/**
+        - src/common/**
+  subscriberProcessing:
+    handler: src/subscribers/steps.subscriberProcessing
+    package:
+      include:
+        - src/subscribers/**
+        - src/common/**
+  subscriberAdded:
+    handler: src/subscribers/steps.subscriberAdded
+    package:
+      include:
+        - src/subscribers/**
+        - src/common/**
+  subscriberFailed:
+    handler: src/subscribers/steps.subscriberFailed
+    package:
+      include:
+        - src/subscribers/**
+        - src/common/**
   #api endpoints 
   authenticate:
     handler: src/users/handler.authenticate
@@ -139,6 +193,7 @@ plugins:
   - serverless-secrets
   - serverless-prune-plugin
   - serverless-plugin-cfauthorizer
+  - serverless-pseudo-parameters
 
 custom:
   prune:
@@ -166,6 +221,9 @@ custom:
 
 resources:
   Outputs:
+    AccountId:
+      Value: 
+        Ref: AWS::AccountId
     DalaWalletStateMachineExecutionRoleArn:
       Value:
         Fn::GetAtt:
@@ -220,4 +278,5 @@ resources:
     DalaWalletDepositSNSTopic: ${file(./CloudFormation/SNS/DalaWalletDepositSNSTopic.yml):Topic}
     DalaWalletWithdrawalSNSTopic: ${file(./CloudFormation/SNS/DalaWalletWithdrawalSNSTopic.yml):Topic}
     DalaWalletTransfeSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
-      
+    OnCreateSubscriberStateMachine: ${file(./CloudFormation/StateMachines/OnCreateSubscriberStateMachine.yml):StateMachine}
+    OnCreateWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateWalletStateMachine.yml):StateMachine}      

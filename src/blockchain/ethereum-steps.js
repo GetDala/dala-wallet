@@ -28,7 +28,7 @@ class TransactionNotCompleteError extends Error {
     }
 }
 
-module.exports.isTransactionSuccessful = (event, context, callback) => {
+module.exports.getTransactionReceipt = (event, context, callback) => {
     const transactionHash = event;
     return secretsPromise.then(() => {
         const { RPC_SERVER } = process.env;

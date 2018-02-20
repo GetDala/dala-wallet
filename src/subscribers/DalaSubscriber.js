@@ -5,27 +5,47 @@ const { ItemAlreadyExistsError, InvalidStatusError } = require('../common/Errors
 const AWS = require('aws-sdk');
 const documentClient = new AWS.DynamoDB.DocumentClient();
 
-class DalaWallet {
-    constructor(username, address = null) {
+class DalaSubscriber {
+    /**
+     *                      
+     * @param {string} id The ID of the subscriber
+     * @param {string} sender The sender of the subscription operation 
+     * @param {string} topic The topic to subscribe to 
+     * @param {string} protocol The protocol of this subscription
+     * @param {string} endpoint The endpoint that is subscribing
+     */
+    constructor(id, sender, topic, protocol, endpoint, subscriberArn = null) {
         super();
-        this.username = username;
-        this.address = address;
+        this.id = id;
+        this.sender = sender;
+        this.topic = topic;
+        this.protocol = protocol;
+        this.endpoint = endpoint;
+        this.subscriberArn = subscriberArn;
     }
 
     processing() {
         const updateParams = {
-            TableName: 'DalaWallets',
-            Key: { username: this.username },
-            UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
-            ConditionExpression: 'attribute_not_exists(#username)',
+            TableName: 'DalaSubscribers',
+            Key: { id: this.id },
+            UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated, #sender = :sender, #topic = :topic, #protocol = :protocol, #endpoint = :endpoint',
+            ConditionExpression: 'attribute_not_exists(#id)',
             ExpressionAttributeNames: {
-                '#username': 'username',
+                '#id': 'id',
                 '#status': 'status',
-                '#lastUpdated': 'lastUpdated'
+                '#lastUpdated': 'lastUpdated',
+                '#sender': 'sender',
+                '#topic': 'topic',
+                '#protocol': 'protocol',
+                '#endpoint': 'endpoint'
             },
             ExpressionAttributeValues: {
                 ':status': Statuses.Processing,
-                ':lastUpdated': new Date().toISOString()
+                ':lastUpdated': new Date().toISOString(),
+                ':sender': this.sender,
+                ':topic': this.topic,
+                ':protocol': this.protocol,
+                ':endpoint': this.endpoint
             }
         };
         return documentClient.update(updateParams).promise().catch(error => {
@@ -36,21 +56,23 @@ class DalaWallet {
         });
     }
 
-    created() {
+    added() {
         const updateParams = {
-            TableName: 'DalaWallets',
-            Key: { username: this.username },
-            UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
+            TableName: 'DalaSubscribers',
+            Key: { id: this.id },
+            UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated, #subscriberArn = :subscriberArn',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#username': 'username',
+                '#id': 'id',
                 '#status': 'status',
-                '#lastUpdated': 'lastUpdated'
+                '#lastUpdated': 'lastUpdated',
+                '#subscriberArn': 'subscriberArn'
             },
             ExpressionAttributeValues: {
                 ':currentStatus': Statuses.Processing,
                 ':status': Statuses.Created,
-                ':lastUpdated': new Date().toISOString()
+                ':lastUpdated': new Date().toISOString(),
+                ':subscriberArn': this.subscriberArn
             }
         };
         return documentClient.update(updateParams).promise().catch(error => {
@@ -63,12 +85,12 @@ class DalaWallet {
 
     failed() {
         const updateParams = {
-            TableName: 'DalaWallets',
-            Key: { username: this.username },
+            TableName: 'DalaSubscribers',
+            Key: { id: this.id },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#username': 'username',
+                '#id': 'id',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },
@@ -87,4 +109,4 @@ class DalaWallet {
     }
 }
 
-module.exports = DalaWallet;
+module.exports = DalaSubscriber;

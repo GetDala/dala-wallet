@@ -4,82 +4,198 @@ StateMachine:
     DefinitionString: |-
       {
         "StartAt":"Processing",
-        "States":[
-          {
-            #Update status to processing
-            "Processing":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Catch":[
-
-              ],
-              "Next":"Create Wallet On Chain"
-            },
-            #Execute the create wallet transaction on the blockchain
-            "Create Wallet On Chain":{
-
-            },
-            #Check blockchain transaction status
-            "Check Transaction Status":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Catch":[
-                #TransactionNotCompleteError -> Wait 10s and try again
-                #TransactionFailedError -> Event Failed
-              ],
-              "Next":"Update Wallet Address"
-            },
-            #Wait 10s and check blockchain transaction status again
-            "Wait":{
-              "Type":"Wait",
-              "Next":"Check Transaction Status"
-            },
-            #Update wallet address
-            "Update Wallet Address":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Next":"Successful"
-            },
-            #Update status to successful
-            "Successful":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Next":"Notify Success"
-            },
-            #Update event status to failed
-            "Failed":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Next":"Notify Failure"
-            },
-            "Notify Success":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[],
-              "End":true
-            },
-            "Notify Failure":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[],
-              "End":true
-            }
+        "States":{
+          "Processing":{
+            "Type":"Task",
+            "ResultPath":"$.processingResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-walletProcessing",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Catch":[
+              {
+                "ErrorEquals":[
+                  "States.TaskFailed"
+                ],
+                "ResultPath":"$.error",
+                "Next":"Failed"
+              }
+            ],
+            "Next":"Create Wallet On Chain"
+          },
+          "Create Wallet On Chain":{
+            "Type":"Task",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethCreateWallet",
+            "ResultPath":"$.transactionHash",
+            "Catch":[
+              {
+                "ErrorEquals":[
+                  "States.TaskFailed"
+                ],
+                "ResultPath":"$.error",
+                "Next":"Failed"
+              }
+            ],
+            "Next":"Get Transaction Receipt"
+          },
+          "Get Transaction Receipt":{
+            "Type":"Task",
+            "InputPath":"$.transactionHash",
+            "ResultPath":"$.transactionReceipt",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethGetTransactionReceipt",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                  "TransactionNotCompleteError"
+                ],
+                "MaxAttempts":0
+              },
+              {
+                "ErrorEquals": [
+                  "TransactionFailedError"
+                ],
+                "MaxAttempts":0
+              },
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Catch":[
+              {
+                "ErrorEquals": [
+                  "TransactionNotCompleteError"
+                ], 
+                "ResultPath": "$.transactionNotComplete",
+                "Next": "Wait"
+              },
+              {
+                "ErrorEquals": [
+                  "TransactionFailedError"
+                ], 
+                "ResultPath": "$.transactionFailed",
+                "Next": "Failed"
+              }
+            ],
+            "Next":"Update Wallet Address"
+          },
+          "Wait":{
+            "Type":"Wait",
+            "Seconds":10,
+            "Next":"Get Transaction Receipt"
+          },
+          "Update Wallet Address":{
+            "Type":"Task",
+            "InputPath":"$.transactionReceipt",
+            "ResultPath":"$.updateWalletAddressResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-updateWalletAddress",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Next":"Created"
+          },
+          "Created":{
+            "Type":"Task",
+            "ResultPath":"$.createdResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-walletCreated",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Next":"Notify Success"
+          },
+          "Failed":{
+            "Type":"Task",
+            "ResultPath":"$.failedResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-walletFailed",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Next":"Notify Failure"
+          },
+          "Notify Success":{
+            "Type":"Task",
+            "Resource":"",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Catch":[
+              {
+                "ErrorEquals":[
+                  "States.TaskFailed"
+                ],
+                "ResultPath":"$.error",
+                "Next":"End"
+              }
+            ],
+            "End":true
+          },
+          "Notify Failure":{
+            "Type":"Task",
+            "Resource":"",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Catch":[
+              {
+                "ErrorEquals":[
+                  "States.TaskFailed"
+                ],
+                "ResultPath":"$.error",
+                "Next":"End"
+              }
+            ],
+            "End":true
+          },
+          "End":{
+            "Type":"Pass",
+            "End":true
           }
-        ]
+        }
       }
-    RoleArn: {self:resources.Outputs.DalaWalletStateMachineExecutionRoleArn.Value}
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 

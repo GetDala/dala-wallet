@@ -1,41 +1,83 @@
-Type: AWS::StepFunctions::StateMachine
+StateMachine:  
+  Type: AWS::StepFunctions::StateMachine
   Properties:
     DefinitionString: |-
       {
-        "StartAt":"Event Processing",
-        "States":[
-          {
-            #Update event status to processing
-            "Processing":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Catch":[
-
-              ],
-              "Next":"Create Subscriber"
-            },
-            "Create Subscriber":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Next":"Event Complete"
-            },
-            "Complete":{
-              "Type":"Task",
-              "Resource":"",
-              "Retry":[
-
-              ],
-              "Catch":[
-
-              ],
-              "End":true
-            }
+        "StartAt":"Processing",
+        "States":{
+          "Processing":{
+            "Type":"Task",
+            "ResultPath":"$.processingResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-subscriberProcessing",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Catch":[
+              {
+                "ErrorEquals":[
+                  "States.TaskFailed"
+                ],
+                "ResultPath":"$.error",
+                "Next":"Failed"
+              }
+            ],
+            "Next":"Subscribe"
+          },
+          "Subscribe":{
+            "Type":"Task",
+            "ResultPath":"$.subscriberResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-subscribe",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Next":"Added"
+          },
+          "Added":{
+            "Type":"Task",
+            "ResultPath":"$.addedResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-subscriberAdded",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "End":true
+          },
+          "Failed":{
+            "Type":"Task",
+            "ResultPath":"$.failedResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-subscriberFailed",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "End":true
           }
+        }
       }
-    RoleArn: {self:resources.Outputs.DalaWalletStateMachineExecutionRoleArn.Value}
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 
