@@ -20,11 +20,21 @@ provider:
     CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
     USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
     DEFAULT_GAS: ${self:custom.profiles.${self:provider.stage}.DEFAULT_GAS}
+    ON_TOKEN_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
+    ON_CREATE_SUBSCRIBER_STATE_MACHINE: ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
+    ON_CREATE_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
   environmentSecrets:
     PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
     RPC_SERVER: '/${self:service}/${self:provider.stage}/RPC_SERVER'
     FROM_ADDRESS: '/${self:service}/${self:provider.stage}/FROM_ADDRESS'
   iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - states:StartExecution
+      Resource:
+        - ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
+        - ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
+        - ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
@@ -263,6 +273,15 @@ resources:
     CognitoUserPoolDalaWalletUserPoolClientId:
       Value: 
         Ref: CognitoUserPoolDalaWalletUserPoolClient
+    OnCreateSubscriberStateMachineArn:
+      Value:
+        Ref: OnCreateSubscriberStateMachine
+    OnCreateWalletStateMachineArn:
+      Value:
+        Ref: OnCreateWalletStateMachine
+    OnTokenTransferStateMachineArn:
+      Value:
+        Ref: OnTokenTransferStateMachine
   Resources:
     DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
@@ -279,4 +298,5 @@ resources:
     DalaWalletWithdrawalSNSTopic: ${file(./CloudFormation/SNS/DalaWalletWithdrawalSNSTopic.yml):Topic}
     DalaWalletTransfeSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
     OnCreateSubscriberStateMachine: ${file(./CloudFormation/StateMachines/OnCreateSubscriberStateMachine.yml):StateMachine}
-    OnCreateWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateWalletStateMachine.yml):StateMachine}      
+    OnCreateWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateWalletStateMachine.yml):StateMachine}  
+    OnTokenTransferStateMachine: ${file(./CloudFormation/StateMachines/OnTokenTransferStateMachine.yml):StateMachine}  

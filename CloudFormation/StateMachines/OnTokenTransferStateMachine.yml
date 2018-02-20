@@ -3,56 +3,28 @@ StateMachine:
   Properties:
     DefinitionString: |-
       {
-        "StartAt":"Event Processing",
+        "StartAt":"Processing",
         "States": {
-          #Update the event entry to have a status of 'PROCESSING'
-          "Event Processing":{
+          "Processing":{
             "Type":"Task",
             "Resource":"",
-            "Retry":[
-
-            ],
-            "Catch":[
-
-            ],
             "Next":"Sweep Tokens"
           },
-          #Invoke the sweep function on the DalaWallet smart contract
           "Sweep Tokens":{
             "Type":"Task",
             "Resource":"",
-            "Retry":[
-
-            ],
-            "Catch":[
-
-            ],
             "Next":"Transfer"
           },
-          #Transfer token balance from Dala pool account on ledger to user account on ledger
           "Transfer":{
             "Type":"Task",
             "Resource":"",
-            "Retry":[
-
-            ],
-            "Catch":[
-
-            ],
-            "Next":"Event Complete"
+            "Next":"Complete"
           },
-          #Update the event status to 'COMPLETED'
-          "Event Complete":{
+          "Complete":{
             "Type":"Task",
             "Resource":"",
-            "Retry":[
-
-            ],
-            "Catch":[
-
-            ],
             "End":true
           }
         }
       }
-    RoleArn: {self:resources.Outputs.DalaWalletStateMachineExecutionRoleArn.Value}
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 
