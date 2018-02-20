@@ -12,9 +12,10 @@ contract TestToken {
   string public name = "TestToken";
   string public symbol = "TTKN";
   uint public decimals = 18;
+  uint public totalSupply = 1000000000000000000000;
 
   function TestToken() {
-    balances[msg.sender] = 1000;
+    balances[msg.sender] = 1000000000000000000000;
   }
 
   /**

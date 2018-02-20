@@ -7,7 +7,6 @@ const Web3Subprovider = require('web3-provider-engine/subproviders/web3.js');
 const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js');
 const AWS = require('aws-sdk');
 const documentClient = new AWS.DynamoDB.DocumentClient({ region: 'eu-west-1' });
-const DalaTokenEvent = require('../lib/DalaTokenEvent');
 
 const secret = require('../../secret');
 const RPC_SERVER = secret.rpcServer;

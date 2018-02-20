@@ -64,6 +64,8 @@ private-key
 #microraiden
 dala_proxy.db
 dala_proxy.db.lock
+dala_raiden_proxy.db.lock
+dala_raiden_proxy.db
 
 #python
 src/microraiden/__pycache__

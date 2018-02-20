@@ -5,6 +5,6 @@ module.exports = function (deployer, network) {
         deployer.deploy(TestToken);
     }
     if(network == 'infuraropsten'){
-        deployer.deploy(TestToken);
+        //will use the actual Dala token deployed on Ropsten
     }
 }
