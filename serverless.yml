@@ -82,6 +82,63 @@ functions:
             Fn::GetAtt:
               - DalaWalletEventsDynamoDbTable
               - StreamArn
+  #notification steps
+  onSuccessfulCreateWallet:
+    handler: src/notifications/steps.onSuccessfulCreateWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedCreateWallet:
+    handler: src/notifications/steps.onFailedCreateWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onSuccessfulTransfer:
+    handler: src/notifications/steps.onSuccessfulTransfer
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedTransfer:
+    handler: src/notifications/steps.onFailedTransfer
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onSuccessfulDeposit:
+    handler: src/notifications/steps.onSuccessfulDeposit
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedDeposit:
+    handler: src/notifications/steps.onFailedDeposit
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onSuccessfulWithdrawal:
+    handler: src/notifications/steps.onSuccessfulWithdrawal
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedWithdrawal:
+    handler: src/notifications/steps.onFailedWithdrawal
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
   #state machine steps
   ethGetTransactionReceipt:
     handler: src/blockchain/ethereum-steps.getTransactionReceipt
@@ -203,7 +260,6 @@ plugins:
   - serverless-secrets
   - serverless-prune-plugin
   - serverless-plugin-cfauthorizer
-  - serverless-pseudo-parameters
 
 custom:
   prune:

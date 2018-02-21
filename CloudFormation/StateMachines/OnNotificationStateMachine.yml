@@ -1,0 +1,15 @@
+StateMachine:
+  Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Send Notification",
+        "States": {
+          "Send Notification":{
+            "Type":"Task",
+            "Resource":"",
+            "End":true
+          }
+        }
+      }
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 
