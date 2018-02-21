@@ -146,7 +146,7 @@ StateMachine:
           },
           "Notify Success":{
             "Type":"Task",
-            "Resource":"",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-onSuccessfulCreateWallet",
             "Retry":[
               {
                 "ErrorEquals": [
@@ -170,7 +170,7 @@ StateMachine:
           },
           "Notify Failure":{
             "Type":"Task",
-            "Resource":"",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-onFailedCreateWallet",
             "Retry":[
               {
                 "ErrorEquals": [
