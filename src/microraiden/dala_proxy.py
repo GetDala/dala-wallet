@@ -53,7 +53,7 @@ def start(app):
     app.add_paywalled_resource(PaywalledRegisterUser, '/v1/users', 10)
     app.add_paywalled_resource(PaywalledAuthenticate, '/v1/authentications', 10)
     app.add_paywalled_resource(PaywalledCreateWallet, '/v1/wallets', 10)
-    app.add_paywalled_resource(PaywalledSubscribe, '/v1/subscribres', 10)
+    app.add_paywalled_resource(PaywalledSubscribe, '/v1/subscribers', 10)
     app.run(host='0.0.0.0',debug=True)
     app.join()
 
