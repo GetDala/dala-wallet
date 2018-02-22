@@ -1,0 +1,22 @@
+StateMachine:
+  Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Create Fineract Client",
+        "States":{
+          "Create Fineract Client":{
+            "Type":"Task",
+            "ResultPath":"$.fineractClient",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finCreateClient",
+            "Next":"Create Fineract Account"
+          },
+          "Create Fineract Account":{
+            "Type":"Task",
+            "ResultPath":"$.fineractAccount",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finCreateAccount",
+            "End":true
+          }
+        }
+      }
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 

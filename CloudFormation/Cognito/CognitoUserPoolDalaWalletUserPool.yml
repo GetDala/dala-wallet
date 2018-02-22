@@ -1,6 +1,6 @@
 UserPool:
   Type: AWS::Cognito::UserPool
-  DependsOn: DalaWalletSMSRole
+  DependsOn: DalaWalletSMSRole 
   Properties:
     AdminCreateUserConfig: 
       AllowAdminCreateUserOnly: False

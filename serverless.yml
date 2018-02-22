@@ -8,21 +8,30 @@ package:
     - secret.js
     - truffle.js
 
-
 provider:
   name: aws
   stage: ${opt:stage, self:custom.defaultStage}
   profile: ${opt:profile}
   region: eu-west-1
-  accountId: #{AWS::AccountId}
   runtime: nodejs6.10
+  vpc:
+    securityGroupIds: 
+      - Fn::ImportValue: dala-infrastructure-DalaInstanceSecurityGroupId
+    subnetIds:
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetAId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
   environment:
-    CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
-    USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+    FINERACT_API_ENDPOINT_BASE: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_API_ENDPOINT_BASE}
+    DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
+    WALLET_STATUS_TOPIC: ${self:resources.Outputs.DalaWalletStatusSNSTopicArn.Value}
+    TRANSFER_TOPIC: ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
+    WITHDRAWAL_TOPIC: ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
     DEFAULT_GAS: ${self:custom.profiles.${self:provider.stage}.DEFAULT_GAS}
     ON_TOKEN_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
     ON_CREATE_SUBSCRIBER_STATE_MACHINE: ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
     ON_CREATE_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
+    ON_USER_CONFIRMED_STATE_MACHINE: ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
   environmentSecrets:
     PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
     RPC_SERVER: '/${self:service}/${self:provider.stage}/RPC_SERVER'
@@ -53,10 +62,31 @@ provider:
         - cognito-idp:AdminResetUserPassword
       Resource:
         - ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolArn.Value}
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+        - SNS:Subscribe
+      Resource:
+        - ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
+        - ${self:resources.Outputs.DalaWalletStatusSNSTopicArn.Value}
+        - ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
+        - ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
   apiKeys:
     - ${self:service}-${self:provider.stage}
 
 functions:
+  #cognito hooks
+  onUserConfirmed:
+    handler: src/users/triggers.onUserConfirmed
+    package:
+      include:
+        - src/users/**
+        - src/common/**
+        - src/model/**
+    # events:
+    #   - cognitoUserPool:
+    #       pool: DalaWalletUserPool
+    #       trigger: PostConfirmation
   #dynamodb stream listeners
   onDalaTokenEvent:
     handler: src/token/listeners.onDalaTokenEvent
@@ -140,6 +170,12 @@ functions:
         - src/common/**
         - src/model/**
   #state machine steps
+  sendNotification:
+    handler: src/notifications/steps.sendNotification
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
   ethGetTransactionReceipt:
     handler: src/blockchain/ethereum-steps.getTransactionReceipt
     package:
@@ -208,9 +244,30 @@ functions:
       include:
         - src/subscribers/**
         - src/common/**
+  transferProcessing:
+    handler: src/transfers/steps.transferProcessing
+    package:
+      include:
+        - src/transfers/**
+        - src/common/**
+  transferComplete:
+    handler: src/transfers/steps.transferComplete
+    package:
+      include:
+        - src/transfers/**
+        - src/common/**
+  transferFailed:
+    handler: src/transfers/steps.transferFailed
+    package:
+      include:
+        - src/transfers/**
+        - src/common/**
   #api endpoints 
   authenticate:
     handler: src/users/handler.authenticate
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
     package: 
       include:
         - src/users/**
@@ -222,6 +279,9 @@ functions:
           private: true
   registerUser:
     handler: src/users/handler.register
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
     package:
       include:
         - src/users/**
@@ -287,9 +347,18 @@ custom:
 
 resources:
   Outputs:
-    AccountId:
-      Value: 
-        Ref: AWS::AccountId
+    DalaWalletDepositSNSTopicArn:
+      Value:
+        Ref: DalaWalletDepositSNSTopic
+    DalaWalletStatusSNSTopicArn:
+      Value:
+        Ref: DalaWalletStatusSNSTopic
+    DalaWalletTransferSNSTopicArn:
+      Value:
+        Ref: DalaWalletTransferSNSTopic
+    DalaWalletWithdrawalSNSTopicArn:
+      Value:
+        Ref: DalaWalletWithdrawalSNSTopic
     DalaWalletStateMachineExecutionRoleArn:
       Value:
         Fn::GetAtt:
@@ -338,6 +407,9 @@ resources:
     OnTokenTransferStateMachineArn:
       Value:
         Ref: OnTokenTransferStateMachine
+    OnUserConfirmedStateMachineArn:
+      Value:
+        Ref: OnUserConfirmedStateMachine
   Resources:
     DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
@@ -352,7 +424,98 @@ resources:
     DalaWalletStatusSNSTopic: ${file(./CloudFormation/SNS/DalaWalletStatusSNSTopic.yml):Topic}
     DalaWalletDepositSNSTopic: ${file(./CloudFormation/SNS/DalaWalletDepositSNSTopic.yml):Topic}
     DalaWalletWithdrawalSNSTopic: ${file(./CloudFormation/SNS/DalaWalletWithdrawalSNSTopic.yml):Topic}
-    DalaWalletTransfeSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
+    DalaWalletTransferSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
     OnCreateSubscriberStateMachine: ${file(./CloudFormation/StateMachines/OnCreateSubscriberStateMachine.yml):StateMachine}
     OnCreateWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateWalletStateMachine.yml):StateMachine}  
     OnTokenTransferStateMachine: ${file(./CloudFormation/StateMachines/OnTokenTransferStateMachine.yml):StateMachine}  
+    OnUserConfirmedStateMachine: ${file(./CloudFormation/StateMachines/OnUserConfirmedStateMachine.yml):StateMachine}
+    #these functions have to depend on each other in a chain otherwise a cloudformation throttle exception is hit
+    OnUserConfirmedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnDalaTokenEventLambdaFunction
+    OnDalaTokenEventLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnDalaWalletEventLambdaFunction
+    OnDalaWalletEventLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnSuccessfulCreateWalletLambdaFunction
+    OnSuccessfulCreateWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnFailedCreateWalletLambdaFunction
+    OnFailedCreateWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnSuccessfulTransferLambdaFunction
+    OnSuccessfulTransferLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnFailedTransferLambdaFunction
+    OnFailedTransferLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnSuccessfulDepositLambdaFunction
+    OnSuccessfulDepositLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnFailedDepositLambdaFunction
+    OnFailedDepositLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnSuccessfulWithdrawalLambdaFunction
+    OnSuccessfulWithdrawalLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnFailedWithdrawalLambdaFunction
+    OnFailedWithdrawalLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: SendNotificationLambdaFunction
+    SendNotificationLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: EthGetTransactionReceiptLambdaFunction
+    EthGetTransactionReceiptLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: EthSweepWalletLambdaFunction
+    EthSweepWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: EthCreateWalletLambdaFunction
+    EthCreateWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: WalletProcessingLambdaFunction
+    WalletProcessingLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: WalletFailedLambdaFunction
+    WalletFailedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: WalletCreatedLambdaFunction
+    WalletCreatedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: UpdateWalletAddressLambdaFunction
+    UpdateWalletAddressLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: SubscribeLambdaFunction
+    SubscribeLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: SubscriberProcessingLambdaFunction
+    SubscriberProcessingLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: SubscriberAddedLambdaFunction
+    SubscriberAddedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: SubscriberFailedLambdaFunction
+    SubscriberFailedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: TransferProcessingLambdaFunction
+    TransferProcessingLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: TransferCompleteLambdaFunction
+    TransferCompleteLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: TransferFailedLambdaFunction
+    TransferFailedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: AuthenticateLambdaFunction
+    AuthenticateLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: RegisterUserLambdaFunction
+    RegisterUserLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: CreateWalletLambdaFunction
+    CreateWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: CreateSubscriberLambdaFunction
+    CreateSubscriberLambdaFunction:
+      Type: AWS::Lambda::Function

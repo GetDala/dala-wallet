@@ -13,6 +13,9 @@ module.exports.onDalaWalletEvent = (event, context, callback) => {
         },
         [EventTypes.Notification]: {
             stateMachineArn: process.env.ON_NOTIFICATION_STATE_MACHINE
+        },
+        [EventTypes.UserConfirmed]: {
+            stateMachineArn: process.env.ON_USER_CONFIRMED_STATE_MACHINE
         }
     }).then(() => context.succeed(event)).catch(contex.fail);
 };

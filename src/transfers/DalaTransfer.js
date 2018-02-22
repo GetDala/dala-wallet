@@ -5,33 +5,32 @@ const { ItemAlreadyExistsError, InvalidStatusError } = require('../common/Errors
 const AWS = require('aws-sdk');
 const documentClient = new AWS.DynamoDB.DocumentClient();
 
-class DalaWallet {
+class DalaTransfer
+{
     /**
      * 
-     * @param {string} username  The username of the wallet owner
-     * @param {string} address   The address of the created wallet   
+     * @param {string} id   The ID of the transfer 
      */
-    constructor(username, address = null) {
+    constructor(id){
         super();
-        this.username = username;
-        this.address = address;
+        this.id = id;
     }
 
     /**
-     * Update wallet status to PROCESSING
+     * Update the transfer status to PROCESSING
      */
-    processing() {
+    processing(){
         const updateParams = {
-            TableName: 'DalaWallets',
-            Key: { username: this.username },
+            TableName: 'DalaTransfers',
+            Key: {id: this.id},
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
-            ConditionExpression: 'attribute_not_exists(#username)',
+            ConditionExpression: 'attribute_not_exists(#id)',
             ExpressionAttributeNames: {
-                '#username': 'username',
-                '#status': 'status',
-                '#lastUpdated': 'lastUpdated'
+                '#id':'id',
+                '#status':'status',
+                '#lastUpdated':'lastUpdated'
             },
-            ExpressionAttributeValues: {
+            ExpressionAttributeValues:{
                 ':status': Statuses.Processing,
                 ':lastUpdated': new Date().toISOString()
             }
@@ -45,22 +44,22 @@ class DalaWallet {
     }
 
     /**
-     * Update the wallet status to CREATED
+     * Update the transfer status to COMPLETE
      */
-    created() {
+    complete(){
         const updateParams = {
-            TableName: 'DalaWallets',
-            Key: { username: this.username },
+            TableName: 'DalaTransfers',
+            Key: { id: this.id },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#username': 'username',
+                '#id': 'id',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },
             ExpressionAttributeValues: {
                 ':currentStatus': Statuses.Processing,
-                ':status': Statuses.Created,
+                ':status': Statuses.Complete,
                 ':lastUpdated': new Date().toISOString()
             }
         };
@@ -73,22 +72,22 @@ class DalaWallet {
     }
 
     /**
-     * Update the wallet status to FAILED
+     * Update the transfer status to FAILED
      */
-    failed() {
+    failed(){
         const updateParams = {
-            TableName: 'DalaWallets',
-            Key: { username: this.username },
+            TableName: 'DalaTransfers',
+            Key: { id: this.id },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#username': 'username',
+                '#id': 'id',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },
             ExpressionAttributeValues: {
                 ':currentStatus': Statuses.Processing,
-                ':status': Statuses.Created,
+                ':status': Statuses.Failed,
                 ':lastUpdated': new Date().toISOString()
             }
         };
@@ -100,5 +99,3 @@ class DalaWallet {
         });
     }
 }
-
-module.exports = DalaWallet;

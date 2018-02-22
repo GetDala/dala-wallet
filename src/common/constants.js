@@ -3,5 +3,6 @@
 module.exports.EventTypes = {
     CreateSubscriber: 'dala-subscriber:create',
     CreateWallet: 'dala-wallet:create',
-    Notification: 'dala-wallet:notification'
+    Notification: 'dala-wallet:notification',
+    UserConfirmed: 'dala-user:confirmed'
 }

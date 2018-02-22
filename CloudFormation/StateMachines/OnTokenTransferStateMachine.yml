@@ -7,22 +7,65 @@ StateMachine:
         "States": {
           "Processing":{
             "Type":"Task",
-            "Resource":"",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-transferProcessing",
+            "Catch":[
+              {
+                "ErrorEquals":[
+                  "ItemAlreadyExistsError", 
+                  "InvalidStatusError"
+                ],
+                "ResultPath":"$.error",
+                "Next":"End"
+              },
+              {
+                "ErrorEquals":[
+                  "States.TaskFailed"
+                ],
+                "ResultPath":"$.error",
+                "Next":"Failed"
+              }
+            ],
+            "Retry":[
+              {
+                "ErrorEquals":[
+                  "ItemAlreadyExistsError", 
+                  "InvalidStatusError"
+                ],
+                "MaxAttempts":0
+              },
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
             "Next":"Sweep Tokens"
           },
           "Sweep Tokens":{
             "Type":"Task",
-            "Resource":"",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethSweepWallet",
             "Next":"Transfer"
           },
           "Transfer":{
             "Type":"Task",
-            "Resource":"",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finTransfer",
             "Next":"Complete"
           },
           "Complete":{
             "Type":"Task",
-            "Resource":"",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-transferComplete",
+            "End":true
+          },
+          "Failed":{
+            "Type":"Task",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-transferFailed",
+            "End":true
+          },
+          "End":{
+            "Type":"Pass",
             "End":true
           }
         }
