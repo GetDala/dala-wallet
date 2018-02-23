@@ -303,6 +303,7 @@ functions:
           method: post
           cors: true
           private: true
+          cfAuthorizer: DalaWalletAuthorizer
   createSubscriber:
     handler: src/subscribers/handler.create
     package:
@@ -315,6 +316,7 @@ functions:
           method: post
           cors: true
           private: true
+          cfAuthorizer: DalaWalletAuthorizer
 
 plugins:
   - serverless-secrets

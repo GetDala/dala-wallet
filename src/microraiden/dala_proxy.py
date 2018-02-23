@@ -3,6 +3,7 @@ import requests
 import json
 import configparser
 import os
+import boto3
 from microraiden.click_helpers import main, pass_app
 from microraiden.proxy.resources import Expensive, PaywalledProxyUrl
 from flask import Response, make_response, request, render_template_string, jsonify
@@ -11,7 +12,14 @@ config = configparser.ConfigParser()
 config.read('src/microraiden/config.ini')
 env = os.environ.get('ENVIRONMENT', 'SANDBOX')
 
+lambdaClient = boto3.client('lambda')
+
 baseUrl = config[env]['BASE_URL']
+registerUser = lambdaClient.get_function(FunctionName=config[env]['LAMBDA_REGISTER_USER'])['Configuration']['FunctionArn']
+authenticate = lambdaClient.get_function(FunctionName=config[env]['LAMBDA_AUTHENTICATE'])['Configuration']['FunctionArn']
+createWallet = lambdaClient.get_function(FunctionName=config[env]['LAMBDA_CREATE_WALLET'])['Configuration']['FunctionArn']
+subscribe = lambdaClient.get_function(FunctionName=config[env]['LAMBDA_SUBSCRIBE'])['Configuration']['FunctionArn']
+
 
 class PaywalledResourceBase(Expensive):
     def create_headers(request):
