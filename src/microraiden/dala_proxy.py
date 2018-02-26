@@ -14,7 +14,6 @@ env = os.environ.get('ENVIRONMENT', 'SANDBOX')
 
 lambdaClient = boto3.client('lambda')
 
-baseUrl = config[env]['BASE_URL']
 registerUser = lambdaClient.get_function(FunctionName=config[env]['LAMBDA_REGISTER_USER'])['Configuration']['FunctionArn']
 authenticate = lambdaClient.get_function(FunctionName=config[env]['LAMBDA_AUTHENTICATE'])['Configuration']['FunctionArn']
 createWallet = lambdaClient.get_function(FunctionName=config[env]['LAMBDA_CREATE_WALLET'])['Configuration']['FunctionArn']

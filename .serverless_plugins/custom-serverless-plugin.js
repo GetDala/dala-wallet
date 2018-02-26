@@ -10,7 +10,6 @@ class ServerlessPlugin {
     this.serverless = serverless;
     this.options = options;
     this.provider = this.serverless.getProvider('aws');
-    this.pluginCustom = this.loadCustom(this.serverless.service.custom);
 
     this.hooks = {
       'after:deploy:deploy': this.addVpcLinksToApiEndpoints.bind(this),
@@ -18,10 +17,11 @@ class ServerlessPlugin {
   }
 
   loadCustom(custom) {
-    const pluginCustom = {};
+    let pluginCustom = {};
     if (custom && custom.vpcLinks) {
-      pluginCustom.baseUri = custom.vpcLinks.baseUri;
-      pluginCustom.vpcLinkId = custom.vpcLinks.vpcLinkId;
+      pluginCustom = custom.vpcLinks;
+      // pluginCustom.baseUri = custom.vpcLinks.baseUri;
+      // pluginCustom.vpcLinkId = custom.vpcLinks.vpcLinkId;
     }
 
     return pluginCustom;
@@ -30,7 +30,7 @@ class ServerlessPlugin {
   getStackResources() {
     this.stackName = util.format('%s-%s',
       this.serverless.service.getServiceName(),
-      this.serverless.getProvider('aws').getStage()
+      this.provider.getStage()
     );
     return this.provider.request(
       'CloudFormation',
@@ -53,33 +53,81 @@ class ServerlessPlugin {
     )
   }
 
+  camel(path) {
+    const elements = path.split('/');
+    return elements.map(val => val.substring(0, 1).toUpperCase() + val.substring(1)).join('');
+  }
+
+  camelMethod(method) {
+    return method.substring(0, 1).toUpperCase() + method.substring(1).toLowerCase();
+  }
+
   putVpcLinkIntegration(restApiId, method) {
+    const camelPath = this.camel(method.path);
+    const camelMethod = this.camelMethod(method.resourceMethods.method);
+    const logicalResourceId = `ApiGatewayMethod${camelPath}${camelMethod}`
     const payload = {
       httpMethod: method.resourceMethods.method,
       integrationHttpMethod: method.resourceMethods.method,
       resourceId: method.id,
-      restApiId,
-      type: 'HTTP_PROXY',
-      connectionId: this.pluginCustom.vpcLinkId,
-      connectionType: 'VPC_LINK',
-      uri: `${this.pluginCustom.baseUri}${method.path}`
-    };
-    console.log(payload);
-    return this.provider.request(
-      'APIGateway',
-      'putIntegration',
-      payload,
-      this.provider.getStage(),
-      this.provider.getRegion()
-    );
+      restApiId
+    }
+
+    const api = this.pluginCustom.apis[logicalResourceId];
+    if (api) {
+      if (api.enabled) {
+        //create VPC_LINK HTTP_PROXY
+        payload.type = 'HTTP_PROXY';
+        payload.connectionId = this.pluginCustom.vpcLinkId;
+        payload.connectionType = 'VPC_LINK';
+        payload.uri = `${this.pluginCustom.baseUri}${method.path}`;
+      } else {
+        //create AWS_PROXY
+        const lambdaFunction = `${api.functionArn}`;
+        const region = this.provider.getRegion();
+        payload.type = 'AWS_PROXY';
+        payload.uri = `arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambdaFunction}/invocations`
+      }
+      console.log(JSON.stringify(payload));
+      return this.provider.request(
+        'APIGateway',
+        'getMethod',
+        {
+          restApiId,
+          httpMethod: payload.httpMethod,
+          resourceId: payload.resourceId
+        },
+        this.provider.getStage(),
+        this.provider.getRegion()
+      ).then(apiMethod => {
+        const { methodIntegration } = apiMethod;
+        if (methodIntegration) {
+          const { uri, connectionType } = methodIntegration;
+          if (uri == payload.uri && connectionType == payload.connectionType) {
+            this.serverless.cli.log(`custom: Integration for ${method.path} has already been created`);
+            return;
+          }else{
+            this.serverless.cli.log(`custom: Integration for ${method.path} is being created`);
+          }
+        }
+        return this.provider.request(
+          'APIGateway',
+          'putIntegration',
+          payload,
+          this.provider.getStage(),
+          this.provider.getRegion()
+        );
+      });
+    }
   }
 
   addVpcLinksToApiEndpoints() {
+    this.pluginCustom = this.loadCustom(this.serverless.service.custom);
+    console.log(JSON.stringify(this.pluginCustom));
     let restApiId;
     return this.getStackResources().then(resources => {
       restApiId = resources.StackResourceSummaries.find(x => x.LogicalResourceId === 'ApiGatewayRestApi').PhysicalResourceId;
       return this.getApiResources(restApiId);
-      // const methods = resources.StackResourceSummaries.filter(x=>x.ResourceType === 'AWS::ApiGateway::Method')
     }).then(apis => {
       const methods = apis.items.filter(api => !!api.resourceMethods);
       const allMethods = [];
@@ -104,31 +152,9 @@ class ServerlessPlugin {
       return Promise.all(allMethods.map(method => {
         return this.putVpcLinkIntegration(restApiId, method);
       })).then((results) => {
-        console.log(JSON.stringify(results));
+        this.serverless.cli.log(`custom: VPC Links added`);
       });;
     });
-    // if (this.options.noDeploy === true) {
-    //   return Promise.resolve();
-    // }
-
-    // const resources = this.serverless.service.provider.compiledCloudFormationTemplate.Resources
-    // Object.keys(resources).map(resourceName => {
-    //   const resource = resources[resourceName]
-    //   if (resource.Type === 'AWS::ApiGateway::Method') {
-    //     console.log(JSON.stringify(resource));
-    //     // const method = resource.Properties.HttpMethod.toUpperCase()
-    //     // const resourceId = resource.Properties.ResourceId.Ref;
-    //     // const path = this.getResourcePath(resources[resource.Properties.ResourceId.Ref], resources)
-    //     // if (this.cfAuthorizers[path]) {
-    //     //   const cfAuthorizer = this.cfAuthorizers[path][method]
-    //     //   if (cfAuthorizer) {
-    //     //     this.serverless.cli.log('Adding CloudFormation Authorizer ' + cfAuthorizer + ' to ' + method + ' ' + path)
-    //     //     resource.Properties.AuthorizationType = this.serverless.service.custom.cfAuthorizers[cfAuthorizer].Type
-    //     //     resource.Properties.AuthorizerId = {Ref:cfAuthorizer}
-    //     //   }
-    //     // }
-    //   }
-    // });
   }
 }
 
