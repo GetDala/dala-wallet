@@ -88,7 +88,6 @@ class ServerlessPlugin {
         payload.type = 'AWS_PROXY';
         payload.uri = `arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambdaFunction}/invocations`
       }
-      console.log(JSON.stringify(payload));
       return this.provider.request(
         'APIGateway',
         'getMethod',
@@ -123,7 +122,6 @@ class ServerlessPlugin {
 
   addVpcLinksToApiEndpoints() {
     this.pluginCustom = this.loadCustom(this.serverless.service.custom);
-    console.log(JSON.stringify(this.pluginCustom));
     let restApiId;
     return this.getStackResources().then(resources => {
       restApiId = resources.StackResourceSummaries.find(x => x.LogicalResourceId === 'ApiGatewayRestApi').PhysicalResourceId;
@@ -153,7 +151,18 @@ class ServerlessPlugin {
         return this.putVpcLinkIntegration(restApiId, method);
       })).then((results) => {
         this.serverless.cli.log(`custom: VPC Links added`);
-      });;
+        return this.provider.request(
+          'APIGateway',
+          'createDeployment',
+          {
+            restApiId
+          },
+          this.provider.getStage(),
+          this.provider.getRegion()
+        )
+      }).then(()=>{
+        this.serverless.cli.log('custom: API deployed');
+      });
     });
   }
 }

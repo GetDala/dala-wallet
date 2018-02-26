@@ -44,9 +44,17 @@ class PaywalledAuthenticate(PaywalledResourceBase):
 
 class PaywalledCreateWallet(PaywalledResourceBase):
     def post(self, url):
-        headers = self.create_headers(request)
-        response = requests.post(baseUrl+'v1/wallets', json=request.json, headers=headers)
-        return response.json()
+        print(request)
+        authorization = request.headers.get('Authorization')
+        apiKey = request.headers.get('x-api-key')
+        sender = request.headers.get('RDN-Sender-Address')
+        body = request.json
+        return {
+            'yes':1
+        }
+        # headers = self.create_headers(request)
+        # response = requests.post(baseUrl+'v1/wallets', json=request.json, headers=headers)
+        # return response.json()
 
 class PaywalledSubscribe(PaywalledResourceBase):
     def post(self, url):
