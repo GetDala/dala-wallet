@@ -317,6 +317,19 @@ functions:
           cors: true
           private: true
           cfAuthorizer: DalaWalletAuthorizer
+  microraidenChannelBlockProxy:
+    handler: nofunction.ignore
+    events:
+      - http:
+          path: api/1/channels/{sender}/{block}
+          method: get
+          request:
+            parameters:
+              paths:
+                sender: true
+                block: true
+          cors: true
+          private: true
 
 plugins:
   - serverless-secrets
@@ -330,6 +343,8 @@ custom:
     baseUri: ${self:custom.profiles.${self:provider.stage}.baseUri}
     vpcLinkId: ${self:custom.profiles.${self:provider.stage}.vpcLinkId}
     apis:
+      ApiGatewayMethodApi1ChannelsSenderVarBlockVarGet:
+        enabled: true
       ApiGatewayMethodV1WalletsPost: 
         enabled: true
       ApiGatewayMethodV1SubscribersPost: 

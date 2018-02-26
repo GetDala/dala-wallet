@@ -48,10 +48,8 @@ class PaywalledCreateWallet(PaywalledResourceBase):
         authorization = request.headers.get('Authorization')
         apiKey = request.headers.get('x-api-key')
         sender = request.headers.get('RDN-Sender-Address')
-        body = request.json
-        return {
-            'yes':1
-        }
+        body = request.get_json()
+        args = request.args
         # headers = self.create_headers(request)
         # response = requests.post(baseUrl+'v1/wallets', json=request.json, headers=headers)
         # return response.json()
