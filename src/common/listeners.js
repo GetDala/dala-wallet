@@ -17,5 +17,5 @@ module.exports.onDalaWalletEvent = (event, context, callback) => {
         [EventTypes.UserConfirmed]: {
             stateMachineArn: process.env.ON_USER_CONFIRMED_STATE_MACHINE
         }
-    }).then(() => context.succeed(event)).catch(contex.fail);
+    }).then(() => context.succeed(event)).catch(context.fail);
 };

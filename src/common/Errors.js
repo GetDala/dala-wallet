@@ -1,5 +1,3 @@
-import { map } from "../../../../../Library/Caches/typescript/2.6/node_modules/@types/async";
-
 'use strict';
 
 class ItemAlreadyExistsError extends Error {
@@ -16,5 +14,14 @@ class InvalidStatusError extends Error {
     }
 }
 
+class MissingParameterError extends Error {
+    constructor(message, parameter){
+        super(message);
+        this.name = 'MissingParameterError';
+        this.parameter = parameter;
+    }
+}
+
 module.exports.ItemAlreadyExistsError = ItemAlreadyExistsError;
 module.exports.InvalidStatusError = InvalidStatusError;
+module.exports.MissingParameterError = MissingParameterError;

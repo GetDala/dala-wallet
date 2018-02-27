@@ -1,0 +1,33 @@
+Table:
+  Type: 'AWS::DynamoDB::Table'
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: username
+        AttributeType: S
+      -
+        AttributeName: clientId
+        AttributeType: N
+    KeySchema:
+        -
+          AttributeName: username
+          KeyType: HASH
+    ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    TableName: 'FineractClients'
+    GlobalSecondaryIndexes:
+      -
+        IndexName: idx_fineractClients_clientId
+        KeySchema:
+          -
+            AttributeName: clientId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    StreamSpecification:
+      StreamViewType: 'NEW_AND_OLD_IMAGES'

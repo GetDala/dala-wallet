@@ -37,8 +37,10 @@ module.exports.getTransactionReceipt = (event, context, callback) => {
         web3.eth.getTransactionReceipt(transactionHash, (error, transaction) => {
             if (error) return context.fail(error);
             if (!transaction) return context.fail(new TransactionNotCompleteError('TransactionNotComplete'));
+            console.log('transaction', JSON.stringify(transaction));
             const { status } = transaction;
-            if (status === 1) {
+
+            if (status === '0x1') {
                 return context.succeed(transaction);
             } else {
                 return context.fail(new TransactionFailedError('TransactionFailed', transaction));

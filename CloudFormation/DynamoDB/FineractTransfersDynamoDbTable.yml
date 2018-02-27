@@ -1,0 +1,33 @@
+Table:
+  Type: 'AWS::DynamoDB::Table'
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: accountTransferId
+        AttributeType: S
+      -
+        AttributeName: resourceId
+        AttributeType: N
+    KeySchema:
+        -
+          AttributeName: accountTransferId
+          KeyType: HASH
+    ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    TableName: 'FineractTransfers'
+    GlobalSecondaryIndexes:
+      -
+        IndexName: idx_fineractTransfers_resourceId
+        KeySchema:
+          -
+            AttributeName: resourceId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    StreamSpecification:
+      StreamViewType: 'NEW_AND_OLD_IMAGES'

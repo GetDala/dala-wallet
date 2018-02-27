@@ -56,28 +56,26 @@ class ServerlessPlugin {
   camel(path) {
     const elements = path.split('/');
     return elements.map(val => {
-      console.log('val', val);
-      if(val.startsWith('{') && val.endsWith('}')){
-        return val.substring(1,2).toUpperCase() + val.substring(2, val.length-1) + 'Var';
+      if (val.startsWith('{') && val.endsWith('}')) {
+        return val.substring(1, 2).toUpperCase() + val.substring(2, val.length - 1) + 'Var';
       }
       return val.substring(0, 1).toUpperCase() + val.substring(1);
     }).join('');
-    
+
   }
 
   camelMethod(method) {
     return method.substring(0, 1).toUpperCase() + method.substring(1).toLowerCase();
   }
 
-  getParameters(path){
-    return path.split('/').filter(part=>part.startsWith('{') && part.endsWith('}')).map(part=>part.substring(1,part.length-1));
+  getParameters(path) {
+    return path.split('/').filter(part => part.startsWith('{') && part.endsWith('}')).map(part => part.substring(1, part.length - 1));
   }
 
   putVpcLinkIntegration(restApiId, method) {
     const camelPath = this.camel(method.path);
     const camelMethod = this.camelMethod(method.resourceMethods.method);
     const logicalResourceId = `ApiGatewayMethod${camelPath}${camelMethod}`;
-    console.log('logicalResourceId', logicalResourceId);
     const payload = {
       httpMethod: method.resourceMethods.method,
       integrationHttpMethod: method.resourceMethods.method,
@@ -95,10 +93,9 @@ class ServerlessPlugin {
         payload.uri = `${this.pluginCustom.baseUri}${method.path}`;
         payload.requestParameters = {};
         const pathParameters = this.getParameters(method.path);
-        pathParameters.forEach(pp=>{
+        pathParameters.forEach(pp => {
           payload.requestParameters[`integration.request.path.${pp}`] = `method.request.path.${pp}`;
         });
-        console.log(payload);
       } else {
         //create AWS_PROXY
         const lambdaFunction = `${api.functionArn}`;
@@ -120,10 +117,10 @@ class ServerlessPlugin {
         const { methodIntegration } = apiMethod;
         if (methodIntegration) {
           const { uri, connectionType, requestParameters } = methodIntegration;
-          if (uri == payload.uri && connectionType == payload.connectionType && requestParameters == payload.requestParameters) {
+          if (uri == payload.uri && connectionType == payload.connectionType && this.objectEquals(requestParameters, payload.requestParameters)) {
             this.serverless.cli.log(`custom: Integration for ${method.path} has already been created`);
             return;
-          }else{
+          } else {
             this.serverless.cli.log(`custom: Integration for ${method.path} is being created`);
           }
         }
@@ -138,6 +135,22 @@ class ServerlessPlugin {
     }
   }
 
+  objectEquals(obj1, obj2) {
+    if(obj1 && !obj2) return false;
+    if(!obj1 && obj2) return false;
+    var result = true;
+    if (obj1 && obj2) {
+      for (var prop in obj1) {
+        var val1 = obj1[prop];
+        var val2 = obj2[prop];
+        if(val1 != val2){
+          result = false;
+        }
+      }
+    }
+    return result;
+  }
+
   addVpcLinksToApiEndpoints() {
     this.pluginCustom = this.loadCustom(this.serverless.service.custom);
     let restApiId;
@@ -145,7 +158,6 @@ class ServerlessPlugin {
       restApiId = resources.StackResourceSummaries.find(x => x.LogicalResourceId === 'ApiGatewayRestApi').PhysicalResourceId;
       return this.getApiResources(restApiId);
     }).then(apis => {
-      console.log(apis);
       const methods = apis.items.filter(api => !!api.resourceMethods);
       const allMethods = [];
       methods.forEach(method => {
@@ -179,7 +191,7 @@ class ServerlessPlugin {
           this.provider.getStage(),
           this.provider.getRegion()
         )
-      }).then(()=>{
+      }).then(() => {
         this.serverless.cli.log('custom: API deployed');
       });
     });

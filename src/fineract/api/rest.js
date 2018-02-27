@@ -24,7 +24,6 @@ module.exports = {
     patch: (path, payload, params) => {
         const urlPath = process.env.FINERACT_API_ENDPOINT_BASE;
         const url = `${urlPath}/${path}`;
-        console.log(url);
         return new Promise((resolve, reject) => {
             request({
                 url,
@@ -44,7 +43,6 @@ module.exports = {
     put: (path, payload, params) => {
         const urlPath = process.env.FINERACT_API_ENDPOINT_BASE;
         const url = `${urlPath}/${path}`;
-        console.log(url);
         return new Promise((resolve, reject) => {
             request({
                 url,

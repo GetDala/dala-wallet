@@ -1,5 +1,7 @@
 'use strict';
 
+const { EventTypes } = require('../common/constants');
+const DalaWalletEvent = require('../model/DalaWalletEvent');
 const AWS = require('aws-sdk');
 const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
@@ -28,7 +30,16 @@ module.exports.authenticate = (event, context, callback) => {
 
 module.exports.register = (event, context, callback) => {
     const body = JSON.parse(event.body);
-    const { username, password, phoneNumber, email } = body;
+    const { username, password, phoneNumber, email, firstName, surname } = body;
+
+    if (!firstName) return context.succeed({
+        statusCode: 400,
+        body: 'firstName is required'
+    });
+    if (!surname) return context.succeed({
+        statusCode: 400,
+        body: 'surname is required'
+    });
 
     const createUserParams = {
         UserPoolId: process.env.USER_POOL_ID,
@@ -36,7 +47,16 @@ module.exports.register = (event, context, callback) => {
         ForceAliasCreation: false,
         MessageAction: 'SUPPRESS',
         TemporaryPassword: password,
-        UserAttributes: []
+        UserAttributes: [
+            {
+                Name: 'given_name',
+                Value: firstName
+            },
+            {
+                Name: 'family_name',
+                Value: surname
+            }
+        ]
     };
     if (email) {
         createUserParams.UserAttributes.push({
@@ -86,9 +106,19 @@ module.exports.register = (event, context, callback) => {
             return cognitoIdentityServiceProvider.adminRespondToAuthChallenge(challengeRequest).promise();
         }
     }).then(data => {
-        return context.succeed({
-            statusCode: 200,
-            body: JSON.stringify(data.AuthenticationResult)
+        const walletEvent = new DalaWalletEvent(username, EventTypes.UserConfirmed, {
+            username,
+            firstName,
+            surname,
+            phoneNumber,
+            email
+        }, context);
+        return walletEvent.save().then(() => {
+            return context.succeed({
+                statusCode: 200,
+                body: JSON.stringify(data.AuthenticationResult)
+            });
         });
     }).catch(context.fail);
 }
+

@@ -1,0 +1,33 @@
+Table:
+  Type: 'AWS::DynamoDB::Table'
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: username
+        AttributeType: S
+      -
+        AttributeName: savingsId
+        AttributeType: N
+    KeySchema:
+        -
+          AttributeName: username
+          KeyType: HASH
+    ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    TableName: 'FineractAccounts'
+    GlobalSecondaryIndexes:
+      -
+        IndexName: idx_fineractAccounts_savingsId
+        KeySchema:
+          -
+            AttributeName: savingsId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    StreamSpecification:
+      StreamViewType: 'NEW_AND_OLD_IMAGES'

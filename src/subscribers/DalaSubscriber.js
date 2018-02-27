@@ -15,7 +15,6 @@ class DalaSubscriber {
      * @param {string} endpoint The endpoint that is subscribing
      */
     constructor(id, sender, topic, protocol, endpoint, subscriberArn = null) {
-        super();
         this.id = id;
         this.sender = sender;
         this.topic = topic;

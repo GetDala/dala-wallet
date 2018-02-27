@@ -1,0 +1,39 @@
+Table:
+  Type: 'AWS::DynamoDB::Table'
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: withdrawalId
+        AttributeType: S
+      -
+        AttributeName: withdrawalType
+        AttributeType: S
+      -
+        AttributeName: resourceId
+        AttributeType: N
+    KeySchema:
+        -
+          AttributeName: withdrawalId
+          KeyType: HASH
+        - 
+          AttributeName: withdrawalType
+          KeyType: RANGE
+    ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    TableName: 'FineractWithdrawals'
+    GlobalSecondaryIndexes:
+      -
+        IndexName: idx_fineractWithdrawals_resourceId
+        KeySchema:
+          -
+            AttributeName: resourceId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    StreamSpecification:
+      StreamViewType: 'NEW_AND_OLD_IMAGES'

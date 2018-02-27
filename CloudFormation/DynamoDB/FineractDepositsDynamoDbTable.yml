@@ -1,0 +1,39 @@
+Table:
+  Type: 'AWS::DynamoDB::Table'
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: depositId
+        AttributeType: S
+      -
+        AttributeName: depositType
+        AttributeType: S
+      -
+        AttributeName: resourceId
+        AttributeType: N
+    KeySchema:
+        -
+          AttributeName: depositId
+          KeyType: HASH
+        - 
+          AttributeName: depositType
+          KeyType: RANGE
+    ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    TableName: 'FineractDeposits'
+    GlobalSecondaryIndexes:
+      -
+        IndexName: idx_fineractDeposits_resourceId
+        KeySchema:
+          -
+            AttributeName: resourceId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    StreamSpecification:
+      StreamViewType: 'NEW_AND_OLD_IMAGES'

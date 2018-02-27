@@ -48,7 +48,7 @@ StateMachine:
           "Create Wallet On Chain":{
             "Type":"Task",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethCreateWallet",
-            "ResultPath":"$.transactionHash",
+            "ResultPath":"$.createWalletResult",
             "Catch":[
               {
                 "ErrorEquals":[
@@ -62,7 +62,7 @@ StateMachine:
           },
           "Get Transaction Receipt":{
             "Type":"Task",
-            "InputPath":"$.transactionHash",
+            "InputPath":"$.createWalletResult.transactionHash",
             "ResultPath":"$.transactionReceipt",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethGetTransactionReceipt",
             "Retry":[
@@ -103,29 +103,12 @@ StateMachine:
                 "Next": "Failed"
               }
             ],
-            "Next":"Update Wallet Address"
+            "Next":"Created"
           },
           "Wait":{
             "Type":"Wait",
             "Seconds":10,
             "Next":"Get Transaction Receipt"
-          },
-          "Update Wallet Address":{
-            "Type":"Task",
-            "InputPath":"$.transactionReceipt",
-            "ResultPath":"$.updateWalletAddressResult",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-updateWalletAddress",
-            "Retry":[
-              {
-                "ErrorEquals": [
-                    "States.TaskFailed"
-                ],
-                "IntervalSeconds": 1,
-                "MaxAttempts": 2,
-                "BackoffRate": 2.0
-              }
-            ],
-            "Next":"Created"
           },
           "Created":{
             "Type":"Task",

@@ -12,7 +12,6 @@ class DalaWallet {
      * @param {string} address   The address of the created wallet   
      */
     constructor(username, address = null) {
-        super();
         this.username = username;
         this.address = address;
     }
@@ -23,11 +22,11 @@ class DalaWallet {
     processing() {
         const updateParams = {
             TableName: 'DalaWallets',
-            Key: { username: this.username },
+            Key: { id: this.username },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
-            ConditionExpression: 'attribute_not_exists(#username)',
+            ConditionExpression: 'attribute_not_exists(#id)',
             ExpressionAttributeNames: {
-                '#username': 'username',
+                '#id': 'id',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },
@@ -50,11 +49,10 @@ class DalaWallet {
     created() {
         const updateParams = {
             TableName: 'DalaWallets',
-            Key: { username: this.username },
+            Key: { id: this.username },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#username': 'username',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },
@@ -78,11 +76,10 @@ class DalaWallet {
     failed() {
         const updateParams = {
             TableName: 'DalaWallets',
-            Key: { username: this.username },
+            Key: { id: this.username },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#username': 'username',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },

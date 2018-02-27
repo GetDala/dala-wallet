@@ -15,7 +15,46 @@ StateMachine:
             "Type":"Task",
             "ResultPath":"$.fineractAccount",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finCreateAccount",
-            "End":true
+            "Next":"Approve Fineract Account"
+          },
+          "Approve Fineract Account":{
+            "Type":"Task",
+            "ResultPath":"$.fineractApproved",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finApproveAccount",
+            "Next":"Activate Fineract Account"
+          },
+          "Activate Fineract Account":{
+            "Type":"Task",
+            "ResultPath":"$.fineractApproved",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finActivateAccount",
+            "Next":"Set Values"
+          },
+          "Set Values":{
+            "Type":"Parallel",
+            "ResultPath":"$.setClientValuesResults",
+            "End":true,
+            "Branches":[
+              {
+                "StartAt":"Set Client Id",
+                "States":{
+                  "Set Client Id":{
+                    "Type":"Task",
+                    "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-userSetClientId",
+                    "End":true
+                  }
+                }
+              },
+              {
+                "StartAt":"Set Default Account Id",
+                "States":{
+                  "Set Default Account Id":{
+                    "Type":"Task",
+                    "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-userSetDefaultAccountId",
+                    "End":true
+                  }
+                }
+              }
+            ]
           }
         }
       }

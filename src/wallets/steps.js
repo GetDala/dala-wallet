@@ -9,7 +9,7 @@ module.exports.walletProcessing = (event, context, callback) => {
 }
 
 module.exports.walletCreated = (event, context, callback) => {
-    const wallet = new DalaWallet(event.username, event.address);
+    const wallet = new DalaWallet(event.username, event.transactionReceipt.contractAddress);
     wallet.created().then(context.succeed).catch(context.fail);
 }
 

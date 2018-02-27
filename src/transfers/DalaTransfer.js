@@ -12,7 +12,6 @@ class DalaTransfer
      * @param {string} id   The ID of the transfer 
      */
     constructor(id){
-        super();
         this.id = id;
     }
 

@@ -49,9 +49,11 @@ class PaywalledCreateWallet(PaywalledResourceBase):
         senderAddress = request.headers.get('rdn-sender-address');
         body=request.json
         response = lambdaClient.invoke(
-            FunctionArn=createWallet,
-            Payload: json.dumps({
+            FunctionName=createWallet,
+            Payload=json.dumps({
                 'username': decoded['cognito:username'],
+                'firstName': decoded['given_name'],
+                'surname':decoded['last_name'],
                 'senderAddress': senderAddress,
                 'body': body
             })

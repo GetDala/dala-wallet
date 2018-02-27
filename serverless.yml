@@ -22,6 +22,7 @@ provider:
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
   environment:
+    FINERACT_TENANT_IDENTIFIER: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_TENANT_IDENTIFIER}
     FINERACT_API_ENDPOINT_BASE: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_API_ENDPOINT_BASE}
     DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
     WALLET_STATUS_TOPIC: ${self:resources.Outputs.DalaWalletStatusSNSTopicArn.Value}
@@ -32,6 +33,7 @@ provider:
     ON_CREATE_SUBSCRIBER_STATE_MACHINE: ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
     ON_CREATE_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
     ON_USER_CONFIRMED_STATE_MACHINE: ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
+    DALA_ACCOUNT_PRODUCT: ${self:custom.profiles.${self:provider.stage}.DALA_ACCOUNT_PRODUCT}
   environmentSecrets:
     PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
     RPC_SERVER: '/${self:service}/${self:provider.stage}/RPC_SERVER'
@@ -44,6 +46,7 @@ provider:
         - ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
         - ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
         - ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
+        - ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
@@ -51,8 +54,18 @@ provider:
         - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
+        - dynamodb:UpdateItem
       Resource:
-        - ${self:resources.Outputs.DalaWalletEventsDynamoDbTableArn.Value}
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWalletEvents
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTokenEvents
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWallets
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTransfers
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaSubscribers
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractAccounts
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractClients
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractDeposits
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractTransfers
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWithdrawals
     - Effect: Allow
       Action:
         - cognito-idp:AdminCreateUser
@@ -60,6 +73,8 @@ provider:
         - cognito-idp:AdminRespondToAuthChallenge
         - cognito-idp:AdminGetUser
         - cognito-idp:AdminResetUserPassword
+        - cognito-idp:AdminConfirmSignUp
+        - cognito-idp:AdminUpdateUserAttributes
       Resource:
         - ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolArn.Value}
     - Effect: Allow
@@ -76,6 +91,17 @@ provider:
 
 functions:
   #cognito hooks
+  onUserCreated:
+    handler: src/users/triggers.onUserCreated
+    package:
+      include:
+        - src/users/**
+        - src/common/**
+        - src/model/**
+    # events:
+    #   - cognitoUserPool:
+    #       pool: DalaWalletUserPool
+    #       trigger: PostConfirmation
   onUserConfirmed:
     handler: src/users/triggers.onUserConfirmed
     package:
@@ -262,7 +288,57 @@ functions:
       include:
         - src/transfers/**
         - src/common/**
+  #fineract
+  finCreateClient:
+    handler: src/fineract/steps.createClient
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  finCreateAccount:
+    handler: src/fineract/steps.createAccount
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  finApproveAccount:
+    handler: src/fineract/steps.approveAccount
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  finActivateAccount:
+    handler: src/fineract/steps.activateAccount
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  onFineractWebhook:
+    handler: src/fineract/hooks.onWebhook
+    package:
+      include:
+        - src/fineract/**
+    events:
+      - http:
+          path: v1/fineract-webhooks
+          method: post
+          cors: true
+  
   #api endpoints 
+  userSetClientId:
+    handler: src/users/steps.setClientId
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+  userSetDefaultAccountId:
+    handler: src/users/steps.setDefaultAccountId
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
   authenticate:
     handler: src/users/handler.authenticate
     environment:
@@ -317,6 +393,7 @@ functions:
           cors: true
           private: true
           cfAuthorizer: DalaWalletAuthorizer
+  #microraiden proxies
   microraidenChannelBlockProxy:
     handler: nofunction.ignore
     events:
@@ -375,11 +452,15 @@ custom:
       DESTINATION_ADDRESS: "0xDD86986bA67b4A1A8E7BE4833Dde2c09243333D7"
       TOKEN_ADDRESS: "0x5d689a3de1a648f85d23231a2d95fa89ce3d41fc"
       MIN_BALANCE: 50000000000000000000
+      DALA_ACCOUNT_PRODUCT: 1
   serverlessSecrets:
     providerOptions:
       region: ${self:provider.region}
     keys:
       default: ${self:resources.Outputs.DalaWalletKeyAliasName.Value}
+  scriptHooks:
+    after:deploy:compileEvents: 
+      - scripts/trimAwsLogPermissions.js
 
 resources:
   Outputs:
@@ -399,11 +480,6 @@ resources:
       Value:
         Fn::GetAtt:
           - DalaWalletStateMachineExecutionRole
-          - Arn
-    DalaWalletEventsDynamoDbTableArn:
-      Value:
-        Fn::GetAtt:
-          - DalaWalletEventsDynamoDbTable
           - Arn
     DalaWalletKeyAliasName:
       Value:
@@ -448,10 +524,16 @@ resources:
         Ref: OnUserConfirmedStateMachine
   Resources:
     DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
+    FineractClientsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractClientsDynamoDbTable.yml):Table}
+    FineractAccountsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractAccountsDynamoDbTable.yml):Table}
+    FineractTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractTransfersDynamoDbTable.yml):Table}
+    FineractWithdrawalsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractWithdrawalsDynamoDbTable.yml):Table}
+    FineractDepositsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractDepositsDynamoDbTable.yml):Table}
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
     DalaWalletEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletEventsDynamoDbTable.yml):Table}
     DalaWalletsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletsDynamoDbTable.yml):Table}
     DalaSubscribersDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaSubscribersDynamoDbTable.yml):Table}
+    DalaTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTransfersDynamoDbTable.yml):Table}
     DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
     DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
     DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
