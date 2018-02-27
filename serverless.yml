@@ -33,6 +33,7 @@ provider:
     ON_CREATE_SUBSCRIBER_STATE_MACHINE: ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
     ON_CREATE_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
     ON_USER_CONFIRMED_STATE_MACHINE: ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
+    ON_NOTIFICATION_STATE_MACHINE: ${self:resources.Outputs.OnNotificationStateMachineArn.Value}
     DALA_ACCOUNT_PRODUCT: ${self:custom.profiles.${self:provider.stage}.DALA_ACCOUNT_PRODUCT}
   environmentSecrets:
     PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
@@ -47,6 +48,7 @@ provider:
         - ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
         - ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
         - ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
+        - ${self:resources.Outputs.OnNotificationStateMachineArn.Value}
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
@@ -522,6 +524,9 @@ resources:
     OnUserConfirmedStateMachineArn:
       Value:
         Ref: OnUserConfirmedStateMachine
+    OnNotificationStateMachineArn:
+      Value:
+        Ref: OnNotificationStateMachine
   Resources:
     DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
     FineractClientsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractClientsDynamoDbTable.yml):Table}
@@ -547,6 +552,7 @@ resources:
     OnCreateWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateWalletStateMachine.yml):StateMachine}  
     OnTokenTransferStateMachine: ${file(./CloudFormation/StateMachines/OnTokenTransferStateMachine.yml):StateMachine}  
     OnUserConfirmedStateMachine: ${file(./CloudFormation/StateMachines/OnUserConfirmedStateMachine.yml):StateMachine}
+    OnNotificationStateMachine: ${file(./CloudFormation/StateMachines/OnNotificationStateMachine.yml):StateMachine}
     #these functions have to depend on each other in a chain otherwise a cloudformation throttle exception is hit
     OnUserConfirmedLambdaFunction:
       Type: AWS::Lambda::Function
