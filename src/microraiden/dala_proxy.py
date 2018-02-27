@@ -4,6 +4,7 @@ import json
 import configparser
 import os
 import boto3
+import jwt
 from microraiden.click_helpers import main, pass_app
 from microraiden.proxy.resources import Expensive, PaywalledProxyUrl
 from flask import Response, make_response, request, render_template_string, jsonify
@@ -44,12 +45,19 @@ class PaywalledAuthenticate(PaywalledResourceBase):
 
 class PaywalledCreateWallet(PaywalledResourceBase):
     def post(self, url):
-        print(request)
-        authorization = request.headers.get('Authorization')
-        apiKey = request.headers.get('x-api-key')
-        sender = request.headers.get('RDN-Sender-Address')
-        body = request.get_json()
-        args = request.args
+        decoded = jwt.decode(request.headers.get('authorization'), verify=False)
+        senderAddress = request.headers.get('rdn-sender-address');
+        body=request.json
+        response = lambdaClient.invoke(
+            FunctionArn=createWallet,
+            Payload: json.dumps({
+                'username': decoded['cognito:username'],
+                'senderAddress': senderAddress,
+                'body': body
+            })
+        )
+        print('response', response)
+        return json.dumps({'statusCode': '200', 'status': 'Alright'})
         # headers = self.create_headers(request)
         # response = requests.post(baseUrl+'v1/wallets', json=request.json, headers=headers)
         # return response.json()
