@@ -1,8 +1,6 @@
 'use strict';
 
-module.exports.Statuses = {
-    Processing: 'PROCESSING',
-    Added: 'ADDED',
-    Removed: 'REMOVED',
-    Failed: 'FAILED'
+module.exports.Actions = {
+    Subscribe: 'subscribe',
+    Confirm: 'confirm'
 }

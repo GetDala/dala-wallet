@@ -1,5 +1,6 @@
 'use strict';
 
+const {Topics} = require('./constants');
 const AWS = require('aws-sdk');
 const sns = new AWS.SNS();
 
@@ -24,8 +25,10 @@ module.exports.sendFailedWithdrawal = (event, context) => {
 }
 
 module.exports.sendSuccessfulCreateWallet = (event, context) => { 
-    console.log(event);
-    return context.succeed(event);
+    return sns.publish({
+        TopicArn: process.env[Topics.WalletCreated],
+        Message: JSON.stringify(event)
+    }).promise();
 }
 
 module.exports.sendSuccessfulDeposit = (event, context) => { 

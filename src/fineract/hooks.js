@@ -56,7 +56,7 @@ module.exports.onWebhook = (event, context, callback) => {
                 displayName: displayName
             };
         }).then(payload => {
-            return new DalaWalletEvent(payload.username, EventTypes.Notification, payload, context).save();
+            return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload, context).save();
         }).then(() => {
             return context.succeed({
                 statusCode: 200
@@ -79,7 +79,7 @@ module.exports.onWebhook = (event, context, callback) => {
                 balance: savings.summary.accountBalance
             }
         }).then(payload=>{
-            return new DalaWalletEvent(payload.username, EventTypes.Notification, payload, context).save();
+            return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload, context).save();
         }).then(()=>{
             return context.succeed({
                 statusCode: 200

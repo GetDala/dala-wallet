@@ -25,15 +25,14 @@ provider:
     FINERACT_TENANT_IDENTIFIER: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_TENANT_IDENTIFIER}
     FINERACT_API_ENDPOINT_BASE: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_API_ENDPOINT_BASE}
     DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
-    WALLET_STATUS_TOPIC: ${self:resources.Outputs.DalaWalletStatusSNSTopicArn.Value}
+    WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
     TRANSFER_TOPIC: ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
     WITHDRAWAL_TOPIC: ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
     DEFAULT_GAS: ${self:custom.profiles.${self:provider.stage}.DEFAULT_GAS}
     ON_TOKEN_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
-    ON_CREATE_SUBSCRIBER_STATE_MACHINE: ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
     ON_CREATE_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
     ON_USER_CONFIRMED_STATE_MACHINE: ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
-    ON_NOTIFICATION_STATE_MACHINE: ${self:resources.Outputs.OnNotificationStateMachineArn.Value}
+    ON_WEBHOOK_RECEIVED_STATE_MACHINE: ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
     DALA_ACCOUNT_PRODUCT: ${self:custom.profiles.${self:provider.stage}.DALA_ACCOUNT_PRODUCT}
   environmentSecrets:
     PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
@@ -45,10 +44,9 @@ provider:
         - states:StartExecution
       Resource:
         - ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
-        - ${self:resources.Outputs.OnCreateSubscriberStateMachineArn.Value}
         - ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
         - ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
-        - ${self:resources.Outputs.OnNotificationStateMachineArn.Value}
+        - ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
@@ -62,7 +60,6 @@ provider:
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTokenEvents
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWallets
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTransfers
-        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaSubscribers
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractAccounts
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractClients
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractDeposits
@@ -83,38 +80,16 @@ provider:
       Action:
         - SNS:Publish
         - SNS:Subscribe
+        - SNS:ConfirmSubscription
       Resource:
         - ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
-        - ${self:resources.Outputs.DalaWalletStatusSNSTopicArn.Value}
+        - ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
         - ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
         - ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
   apiKeys:
     - ${self:service}-${self:provider.stage}
 
 functions:
-  #cognito hooks
-  onUserCreated:
-    handler: src/users/triggers.onUserCreated
-    package:
-      include:
-        - src/users/**
-        - src/common/**
-        - src/model/**
-    # events:
-    #   - cognitoUserPool:
-    #       pool: DalaWalletUserPool
-    #       trigger: PostConfirmation
-  onUserConfirmed:
-    handler: src/users/triggers.onUserConfirmed
-    package:
-      include:
-        - src/users/**
-        - src/common/**
-        - src/model/**
-    # events:
-    #   - cognitoUserPool:
-    #       pool: DalaWalletUserPool
-    #       trigger: PostConfirmation
   #dynamodb stream listeners
   onDalaTokenEvent:
     handler: src/token/listeners.onDalaTokenEvent
@@ -198,12 +173,6 @@ functions:
         - src/common/**
         - src/model/**
   #state machine steps
-  sendNotification:
-    handler: src/notifications/steps.sendNotification
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
   ethGetTransactionReceipt:
     handler: src/blockchain/ethereum-steps.getTransactionReceipt
     package:
@@ -247,30 +216,6 @@ functions:
     package:
       include:
         - src/wallets/**
-        - src/common/**
-  subscribe:
-    handler: src/subscribers/steps.subscribe
-    package:
-      include:
-        - src/subscribers/**
-        - src/common/**
-  subscriberProcessing:
-    handler: src/subscribers/steps.subscriberProcessing
-    package:
-      include:
-        - src/subscribers/**
-        - src/common/**
-  subscriberAdded:
-    handler: src/subscribers/steps.subscriberAdded
-    package:
-      include:
-        - src/subscribers/**
-        - src/common/**
-  subscriberFailed:
-    handler: src/subscribers/steps.subscriberFailed
-    package:
-      include:
-        - src/subscribers/**
         - src/common/**
   transferProcessing:
     handler: src/transfers/steps.transferProcessing
@@ -382,8 +327,8 @@ functions:
           cors: true
           private: true
           cfAuthorizer: DalaWalletAuthorizer
-  createSubscriber:
-    handler: src/subscribers/handler.create
+  subscribe:
+    handler: src/subscribers/handler.post
     package:
       include: 
         - src/subscribers/handler.js
@@ -394,7 +339,6 @@ functions:
           method: post
           cors: true
           private: true
-          cfAuthorizer: DalaWalletAuthorizer
   #microraiden proxies
   microraidenChannelBlockProxy:
     handler: nofunction.ignore
@@ -427,7 +371,8 @@ custom:
       ApiGatewayMethodV1WalletsPost: 
         enabled: true
       ApiGatewayMethodV1SubscribersPost: 
-        enabled: true
+        enabled: false
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-subscribe
       ApiGatewayMethodV1AuthenticationsPost: 
         enabled: false
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-authenticate
@@ -466,12 +411,12 @@ custom:
 
 resources:
   Outputs:
+    DalaWalletCreatedSNSTopicArn:
+      Value:
+        Ref: DalaWalletCreatedSNSTopic
     DalaWalletDepositSNSTopicArn:
       Value:
         Ref: DalaWalletDepositSNSTopic
-    DalaWalletStatusSNSTopicArn:
-      Value:
-        Ref: DalaWalletStatusSNSTopic
     DalaWalletTransferSNSTopicArn:
       Value:
         Ref: DalaWalletTransferSNSTopic
@@ -512,9 +457,6 @@ resources:
     CognitoUserPoolDalaWalletUserPoolClientId:
       Value: 
         Ref: CognitoUserPoolDalaWalletUserPoolClient
-    OnCreateSubscriberStateMachineArn:
-      Value:
-        Ref: OnCreateSubscriberStateMachine
     OnCreateWalletStateMachineArn:
       Value:
         Ref: OnCreateWalletStateMachine
@@ -524,9 +466,9 @@ resources:
     OnUserConfirmedStateMachineArn:
       Value:
         Ref: OnUserConfirmedStateMachine
-    OnNotificationStateMachineArn:
+    OnWebhookReceivedStateMachineArn:
       Value:
-        Ref: OnNotificationStateMachine
+        Ref: OnWebhookReceivedStateMachine
   Resources:
     DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
     FineractClientsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractClientsDynamoDbTable.yml):Table}
@@ -537,26 +479,21 @@ resources:
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
     DalaWalletEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletEventsDynamoDbTable.yml):Table}
     DalaWalletsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletsDynamoDbTable.yml):Table}
-    DalaSubscribersDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaSubscribersDynamoDbTable.yml):Table}
     DalaTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTransfersDynamoDbTable.yml):Table}
     DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
     DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
     DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
     CognitoUserPoolDalaWalletUserPool: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPool.yml):UserPool}
     CognitoUserPoolDalaWalletUserPoolClient: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPoolClient.yml):UserPoolClient}
-    DalaWalletStatusSNSTopic: ${file(./CloudFormation/SNS/DalaWalletStatusSNSTopic.yml):Topic}
+    DalaWalletCreatedSNSTopic: ${file(./CloudFormation/SNS/DalaWalletCreatedSNSTopic.yml):Topic}
     DalaWalletDepositSNSTopic: ${file(./CloudFormation/SNS/DalaWalletDepositSNSTopic.yml):Topic}
     DalaWalletWithdrawalSNSTopic: ${file(./CloudFormation/SNS/DalaWalletWithdrawalSNSTopic.yml):Topic}
     DalaWalletTransferSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
-    OnCreateSubscriberStateMachine: ${file(./CloudFormation/StateMachines/OnCreateSubscriberStateMachine.yml):StateMachine}
     OnCreateWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateWalletStateMachine.yml):StateMachine}  
     OnTokenTransferStateMachine: ${file(./CloudFormation/StateMachines/OnTokenTransferStateMachine.yml):StateMachine}  
     OnUserConfirmedStateMachine: ${file(./CloudFormation/StateMachines/OnUserConfirmedStateMachine.yml):StateMachine}
-    OnNotificationStateMachine: ${file(./CloudFormation/StateMachines/OnNotificationStateMachine.yml):StateMachine}
+    OnWebhookReceivedStateMachine: ${file(./CloudFormation/StateMachines/OnWebhookReceivedStateMachine.yml):StateMachine}
     #these functions have to depend on each other in a chain otherwise a cloudformation throttle exception is hit
-    OnUserConfirmedLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnDalaTokenEventLambdaFunction
     OnDalaTokenEventLambdaFunction:
       Type: AWS::Lambda::Function
       DependsOn: OnDalaWalletEventLambdaFunction
@@ -586,9 +523,6 @@ resources:
       DependsOn: OnFailedWithdrawalLambdaFunction
     OnFailedWithdrawalLambdaFunction:
       Type: AWS::Lambda::Function
-      DependsOn: SendNotificationLambdaFunction
-    SendNotificationLambdaFunction:
-      Type: AWS::Lambda::Function
       DependsOn: EthGetTransactionReceiptLambdaFunction
     EthGetTransactionReceiptLambdaFunction:
       Type: AWS::Lambda::Function
@@ -610,18 +544,6 @@ resources:
       DependsOn: UpdateWalletAddressLambdaFunction
     UpdateWalletAddressLambdaFunction:
       Type: AWS::Lambda::Function
-      DependsOn: SubscribeLambdaFunction
-    SubscribeLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: SubscriberProcessingLambdaFunction
-    SubscriberProcessingLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: SubscriberAddedLambdaFunction
-    SubscriberAddedLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: SubscriberFailedLambdaFunction
-    SubscriberFailedLambdaFunction:
-      Type: AWS::Lambda::Function
       DependsOn: TransferProcessingLambdaFunction
     TransferProcessingLambdaFunction:
       Type: AWS::Lambda::Function
@@ -640,6 +562,6 @@ resources:
       DependsOn: CreateWalletLambdaFunction
     CreateWalletLambdaFunction:
       Type: AWS::Lambda::Function
-      DependsOn: CreateSubscriberLambdaFunction
-    CreateSubscriberLambdaFunction:
+      DependsOn: SubscribeLambdaFunction
+    SubscribeLambdaFunction:
       Type: AWS::Lambda::Function

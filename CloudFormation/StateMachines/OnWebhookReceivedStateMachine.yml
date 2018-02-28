@@ -1,0 +1,31 @@
+StateMachine:
+  Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Check Event Type",
+        "States": {
+          "Check Event Type":{
+            "Type":"Choice",
+            "Choices":[
+              {
+                "Variable":"$.eventType",
+                "StringEquals":"SAVINGSACCOUNT:ACTIVATE",
+                "Next":"On Wallet Created"
+              }
+            ],
+            "Default":"End"
+          },
+          "On Wallet Created":{
+            "Type":"Task",
+            "ResultPath":"$.notificationResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-onSuccessfulCreateWallet",
+            "End":true
+          },
+          "End":{
+            "Type":"Pass",
+            "End":true
+          }
+        }
+      }
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 
