@@ -5,7 +5,7 @@ const { ItemAlreadyExistsError, InvalidStatusError } = require('../common/Errors
 const AWS = require('aws-sdk');
 const documentClient = new AWS.DynamoDB.DocumentClient();
 
-class DalaTransfer
+class TokenTransfer
 {
     /**
      * 
@@ -20,7 +20,7 @@ class DalaTransfer
      */
     processing(){
         const updateParams = {
-            TableName: 'DalaTransfers',
+            TableName: 'TokenTransfers',
             Key: {id: this.id},
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: 'attribute_not_exists(#id)',
@@ -47,7 +47,7 @@ class DalaTransfer
      */
     complete(){
         const updateParams = {
-            TableName: 'DalaTransfers',
+            TableName: 'TokenTransfers',
             Key: { id: this.id },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
@@ -75,7 +75,7 @@ class DalaTransfer
      */
     failed(){
         const updateParams = {
-            TableName: 'DalaTransfers',
+            TableName: 'TokenTransfers',
             Key: { id: this.id },
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',

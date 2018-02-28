@@ -7,6 +7,11 @@ module.exports.Topics = {
     Transfer: 'TRANSFER_TOPIC'
 }
 
+module.exports.Statuses = {
+    Successful: 'Successful',
+    Failed: 'Failed'
+}
+
 module.exports.EventTypeTopicMaps = {
     'SAVINGSACCOUNT:APPROVED': 'WALLET_CREATED_TOPIC',
     'SAVINGSACCOUNT:DEPOSIT': 'DEPOSIT_TOPIC',

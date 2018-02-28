@@ -2572,7 +2572,7 @@ object-assign@^4.0.0, object-assign@^4.0.1, object-assign@^4.1.0:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
 
-object-hash@^1.2.0:
+object-hash@^1.1.7, object-hash@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-1.2.0.tgz#e96af0e96981996a1d47f88ead8f74f1ebc4422b"
 
@@ -3096,6 +3096,12 @@ semver@~5.0.1:
 semver@~5.4.1:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.4.1.tgz#e059c09d8571f0540823733433505d3a2f00b18e"
+
+serverless-aws-documentation@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/serverless-aws-documentation/-/serverless-aws-documentation-1.0.0.tgz#92bb9b6419a683e6a30c5c02d46c9bbc42430a9c"
+  dependencies:
+    object-hash "^1.1.7"
 
 serverless-plugin-cfauthorizer@^0.2.4:
   version "0.2.4"

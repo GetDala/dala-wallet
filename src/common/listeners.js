@@ -16,6 +16,9 @@ module.exports.onDalaWalletEvent = (event, context, callback) => {
         },
         [EventTypes.WebhookReceived]: {
             stateMachineArn: process.env.ON_WEBHOOK_RECEIVED_STATE_MACHINE
+        },
+        [EventTypes.ExternalTransfer] : {
+            stateMachineArn: process.env.ON_EXTERNAL_TRANSFER_STATE_MACHINE
         }
     }).then(() => context.succeed(event)).catch(context.fail);
 };

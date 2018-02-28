@@ -33,6 +33,7 @@ provider:
     ON_CREATE_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
     ON_USER_CONFIRMED_STATE_MACHINE: ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
     ON_WEBHOOK_RECEIVED_STATE_MACHINE: ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
+    ON_EXTERNAL_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnExternalTransferStateMachineArn.Value}
     DALA_ACCOUNT_PRODUCT: ${self:custom.profiles.${self:provider.stage}.DALA_ACCOUNT_PRODUCT}
   environmentSecrets:
     PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
@@ -47,6 +48,7 @@ provider:
         - ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
         - ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
         - ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
+        - ${self:resources.Outputs.OnExternalTransferStateMachineArn.Value}
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
@@ -65,6 +67,7 @@ provider:
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractDeposits
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractTransfers
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWithdrawals
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/TokenTransfers
     - Effect: Allow
       Action:
         - cognito-idp:AdminCreateUser
@@ -235,6 +238,24 @@ functions:
       include:
         - src/transfers/**
         - src/common/**
+  tokenTransferProcessing:
+    handler: src/token/steps.transferProcessing
+    package:
+      include:
+        - src/token/**
+        - src/common/**
+  tokenTransferComplete:
+    handler: src/token/steps.transferComplete
+    package:
+      include:
+        - src/token/**
+        - src/common/**
+  tokenTransferFailed:
+    handler: src/token/steps.transferFailed
+    package:
+      include:
+        - src/token/**
+        - src/common/**
   #fineract
   finCreateClient:
     handler: src/fineract/steps.createClient
@@ -331,7 +352,7 @@ functions:
     handler: src/subscribers/handler.post
     package:
       include: 
-        - src/subscribers/handler.js
+        - src/subscribers/**
         - src/common/**
     events:
       - http:
@@ -339,6 +360,20 @@ functions:
           method: post
           cors: true
           private: true
+  createTransfer:
+    handler: src/transfers/handler.createTransfer
+    package:
+      include: 
+        - src/transfers/**
+        - src/common/**
+        - src/model/**
+    events:
+      - http:
+          path: v1/transfers
+          method: post
+          cors: true
+          private: true
+          cfAuthorizer: DalaWalletAuthorizer
   #microraiden proxies
   microraidenChannelBlockProxy:
     handler: nofunction.ignore
@@ -360,6 +395,7 @@ plugins:
   - serverless-plugin-cfauthorizer
   - serverless-scriptable-plugin
   - custom-serverless-plugin
+  - serverless-aws-documentation
 
 custom:
   vpcLinks:
@@ -469,6 +505,9 @@ resources:
     OnWebhookReceivedStateMachineArn:
       Value:
         Ref: OnWebhookReceivedStateMachine
+    OnExternalTransferStateMachineArn:
+      Value:
+        Ref: OnExternalTransferStateMachine
   Resources:
     DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
     FineractClientsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractClientsDynamoDbTable.yml):Table}
@@ -480,6 +519,7 @@ resources:
     DalaWalletEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletEventsDynamoDbTable.yml):Table}
     DalaWalletsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletsDynamoDbTable.yml):Table}
     DalaTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTransfersDynamoDbTable.yml):Table}
+    TokenTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/TokenTransfersDynamoDbTable.yml):Table}
     DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
     DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
     DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
@@ -493,6 +533,7 @@ resources:
     OnTokenTransferStateMachine: ${file(./CloudFormation/StateMachines/OnTokenTransferStateMachine.yml):StateMachine}  
     OnUserConfirmedStateMachine: ${file(./CloudFormation/StateMachines/OnUserConfirmedStateMachine.yml):StateMachine}
     OnWebhookReceivedStateMachine: ${file(./CloudFormation/StateMachines/OnWebhookReceivedStateMachine.yml):StateMachine}
+    OnExternalTransferStateMachine: ${file(./CloudFormation/StateMachines/OnExternalTransferStateMachine.yml):StateMachine}
     #these functions have to depend on each other in a chain otherwise a cloudformation throttle exception is hit
     OnDalaTokenEventLambdaFunction:
       Type: AWS::Lambda::Function

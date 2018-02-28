@@ -22,6 +22,14 @@ module.exports.post = (event, context, callback) => {
 
     function confirm() {
         let { token, topicArn } = body;
+        if(!token) return context.succeed({
+            statusCode: 400,
+            body: 'token is required'
+        });
+        if(!topicArn) return context.succeed({
+            statusCode: 400,
+            body: 'topicArn is required'
+        });
         return sns.confirmSubscription({
             TopicArn: topicArn,
             Token: token
@@ -35,6 +43,19 @@ module.exports.post = (event, context, callback) => {
 
     function subscribe() {
         let { protocol, endpoint, topic } = body;
+        if(!protocol) return context.succeed({
+            statusCode: 400,
+            body: 'protocol is required - one of http|https|email|email-json|sms|sqs|application|lambda'
+        });
+        if(!endpoint) return context.succeed({
+            statusCode: 400,
+            body: 'endpoint is required'
+        });
+        if(!topic) return context.succeed({
+            statusCode: 400,
+            body: 'topic is required - one of WALLET_CREATED_TOPIC|TRANSFER_TOPIC|WITHDRAWAL_TOPIC|DEPOSIT_TOPIC'
+        });
+        
         let topicArn = process.env[topic.toUpperCase()];
 
         return sns.subscribe({

@@ -1,0 +1,14 @@
+StateMachine:
+  Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Finish",
+        "States":{
+          "Finish":{
+            "Type":"Pass",
+            "End":true
+          }
+        }
+      }
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 

@@ -18,6 +18,7 @@ const clients = api.clients();
 const transfers = api.accounttransfers();
 
 module.exports.onWebhook = (event, context, callback) => {
+    console.log(JSON.stringify(event));
     const body = JSON.parse(event.body);
     const action = event.headers['X-Fineract-Action'];
     const endpoint = event.headers['X-Fineract-Endpoint'];
@@ -68,7 +69,7 @@ module.exports.onWebhook = (event, context, callback) => {
         return Promise.all([
             clients.get(body.clientId),
             savings.get(body.savingsId)
-        ]).then(([client, savings])=>{
+        ]).then(([client, savings]) => {
             return {
                 eventType: `${entity}:${action}`,
                 clientId: savings.clientId,
@@ -78,21 +79,51 @@ module.exports.onWebhook = (event, context, callback) => {
                 status: savings.status.value,
                 balance: savings.summary.accountBalance
             }
-        }).then(payload=>{
+        }).then(payload => {
             return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload, context).save();
-        }).then(()=>{
+        }).then(() => {
             return context.succeed({
                 statusCode: 200
-            }); 
+            });
         })
     }
 
     function handleAccountTransferWebhook() {
-        //get client
-        //get account
-        //get resource
-        return context.succeed({
-            statusCode: 200
+        return transfers.get(body.resourceId).then(transfer => {
+            console.log(JSON.stringify(transfer));
+            return Promise.all([
+                clients.get(transfer.fromClient.id),
+                clients.get(transfer.toClient.id),
+                savings.get(transfer.fromAccount.id),
+                savings.get(transfer.toAccount.id)
+            ]).then(([fromClient, toClient, fromAccount, toAccount])=>{
+                return {
+                    eventType: `${entity}:${action}`,
+                    from: {
+                        clientId: transfer.fromClient.id,
+                        accountId: transfer.fromAccount.id,
+                        username: fromAccount.externalId
+                    },
+                    to: {
+                        clientId: transfer.toClient.id,
+                        accountId: transfer.toAccount.id,
+                        username: toAccount.externalId
+                    },
+                    amount: transfer.transferAmount,
+                    date: {
+                        year: transfer.transferDate[0],
+                        month: transfer.transferDate[1],
+                        day: transfer.transferDate[2]
+                    },
+                    description: transfer.transferDescription
+                }
+            })
+        }).then(payload => {
+            return new DalaWalletEvent(`${payload.from.username}:${payload.to.username}`, EventTypes.WebhookReceived, payload, context).save()
+        }).then(() => {
+            return context.succeed({
+                statusCode: 200
+            });
         });
     }
 }

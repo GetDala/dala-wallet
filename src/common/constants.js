@@ -5,5 +5,6 @@ module.exports.EventTypes = {
     CreateWallet: 'dala-wallet:create',
     UserConfirmed: 'dala-user:confirmed',
     UserCreated: 'dala-user:created',
-    WebhookReceived: 'dala-webhook:received'
+    WebhookReceived: 'dala-webhook:received',
+    ExternalTransfer: 'dala-wallet:transfers:external'
 }

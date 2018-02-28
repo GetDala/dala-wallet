@@ -5,8 +5,3 @@ module.exports.Statuses = {
     Complete: 'COMPLETE',
     Failed: 'FAILED'
 }
-
-module.exports.TransferTypes = {
-    External: 'external',
-    Internal: 'internal'
-}
