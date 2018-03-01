@@ -360,8 +360,8 @@ functions:
           method: post
           cors: true
           private: true
-  createTransfer:
-    handler: src/transfers/handler.createTransfer
+  createInternalTransfer:
+    handler: src/transfers/handler.createInternalTransfer
     package:
       include: 
         - src/transfers/**
@@ -369,7 +369,21 @@ functions:
         - src/model/**
     events:
       - http:
-          path: v1/transfers
+          path: v1/internal-transfers
+          method: post
+          cors: true
+          private: true
+          cfAuthorizer: DalaWalletAuthorizer
+  createExternalTransfer:
+    handler: src/transfers/handler.createExternalTransfer
+    package:
+      include: 
+        - src/transfers/**
+        - src/common/**
+        - src/model/**
+    events:
+      - http:
+          path: v1/external-transfers
           method: post
           cors: true
           private: true

@@ -10,36 +10,20 @@ const api = require('../fineract/api');
 const transfers = api.accounttransfers();
 const { getClient, getSavingsAccount } = require('../fineract/utils');
 
-module.exports.createTransfer = (event, context, callback) => {
+module.exports.createInternalTransfer = (event, context, callback) => {
     const userId = CognitoUtils.getUsernameFromEvent(event);
     const body = JSON.parse(event.body);
-    const qs = event.queryStringParameters || {};
-    switch ((qs.transferType || '').toLowerCase()) {
-        case TransferTypes.External:
-            return externalTransfer().then(result => {
-                return context.succeed({
-                    statusCode: 202,
-                    body: 'transfer is being processed'
-                });
-            }).catch(context.fail);
-        case TransferTypes.Internal:
-            return internalTransfer().then(result => {
-                console.log(JSON.stringify(result));
-                return context.succeed({
-                    statusCode: 200,
-                    body: JSON.stringify({
-                        from: userId,
-                        to: body.to,
-                        amount: body.amount
-                    })
-                });
-            }).catch(context.fail);
-        default:
-            return context.succeed({
-                statusCode: 400,
-                body: 'transferType query string is required | one of internal|external'
+    return internalTransfer().then(result => {
+        console.log(JSON.stringify(result));
+        return context.succeed({
+            statusCode: 200,
+            body: JSON.stringify({
+                from: userId,
+                to: body.to,
+                amount: body.amount
             })
-    }
+        });
+    }).catch(context.fail);
 
     function internalTransfer() {
         return Promise.all([
@@ -63,7 +47,7 @@ module.exports.createTransfer = (event, context, callback) => {
             };
             console.log(JSON.stringify(payload));
             return transfers.create(payload);
-        }).then(result=>{
+        }).then(result => {
             console.log(JSON.stringify(result));
             return result;
         }).catch(error => {
@@ -71,6 +55,17 @@ module.exports.createTransfer = (event, context, callback) => {
             throw error;
         });
     }
+}
+
+module.exports.createExternalTransfer = (event, context, callback) => {
+    const userId = CognitoUtils.getUsernameFromEvent(event);
+    const body = JSON.parse(event.body);
+    return externalTransfer().then(result => {
+        return context.succeed({
+            statusCode: 202,
+            body: 'transfer is being processed'
+        });
+    }).catch(context.fail);
 
     function externalTransfer() {
         if (!web3.utils.isAddress(body.to)) {

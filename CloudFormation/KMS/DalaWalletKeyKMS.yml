@@ -11,14 +11,14 @@ Key:
           Sid: "Enable IAM User Permissions"
           Effect: "Allow"
           Principal: 
-            AWS: "arn:aws:iam::346209687917:root"
+            AWS: "arn:aws:iam::${env:AWS_ACCOUNT_ID}:root"
           Action: "kms:*"
           Resource: "*"
         -
           Sid: "Allow use of the key"
           Effect: "Allow"
           Principal: 
-            AWS: "arn:aws:iam::346209687917:role/dala-wallet-api-dev-eu-west-1-lambdaRole"
+            AWS: "arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/dala-wallet-api-${self:provider.stage}-${self:provider.region}-lambdaRole"
           Action: 
             - "kms:Encrypt"
             - "kms:Decrypt"
