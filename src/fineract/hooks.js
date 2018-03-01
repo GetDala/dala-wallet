@@ -6,8 +6,16 @@ const Entities = {
     AccountTransfer: 'ACCOUNTTRANSFER'
 }
 
-const Actions = {
-    Create: 'CREATE'
+const EventTypeMaps = {
+    [`${Entities.AccountTransfer}:CREATE`]: 'dala-wallet:internal-transfer',
+    [`${Entities.SavingsAccount}:ACTIVATE`]: 'dala-wallet:created',
+    [`${Entities.SavingsAccount}:DEPOSIT`]: 'dala-wallet:deposit',
+    [`${Entities.SavingsAccount}:WITHDRAWAL`]: 'dala-wallet:withdrawal',
+}
+
+function getEventType(event){
+    const result = EventTypeMaps[event];
+    return result || event;
 }
 
 const { EventTypes } = require('../common/constants');
@@ -43,7 +51,7 @@ module.exports.onWebhook = (event, context, callback) => {
         return clients.get(body.clientId).then(client => {
             const { id, externalId, status, active, firstname, lastname, displayName, activationDate } = client;
             return {
-                eventType: `${entity}:${action}`,
+                eventType: getEventType(`${entity}:${action}`),
                 clientId: id,
                 username: externalId,
                 status: status.value,
@@ -71,7 +79,7 @@ module.exports.onWebhook = (event, context, callback) => {
             savings.get(body.savingsId)
         ]).then(([client, savings]) => {
             return {
-                eventType: `${entity}:${action}`,
+                eventType: getEventType(`${entity}:${action}`),
                 clientId: savings.clientId,
                 accountId: savings.id,
                 username: savings.externalId,
@@ -98,7 +106,7 @@ module.exports.onWebhook = (event, context, callback) => {
                 savings.get(transfer.toAccount.id)
             ]).then(([fromClient, toClient, fromAccount, toAccount])=>{
                 return {
-                    eventType: `${entity}:${action}`,
+                    eventType: getEventType(`${entity}:${action}`),
                     from: {
                         clientId: transfer.fromClient.id,
                         accountId: transfer.fromAccount.id,
