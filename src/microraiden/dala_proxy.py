@@ -10,7 +10,7 @@ from microraiden.proxy.resources import Expensive, PaywalledProxyUrl
 from flask import Response, make_response, request, render_template_string, jsonify
 
 config = configparser.ConfigParser()
-config.read('src/microraiden/config.ini')
+config.read(os.path.join(os.path.dirname(__file__),'config.ini'))
 env = os.environ.get('ENVIRONMENT', 'SANDBOX')
 
 lambdaClient = boto3.client('lambda')
