@@ -23,7 +23,8 @@ UserPoolClient:
       - picture
       - custom:wallet_address
       - custom:client_id
-      - custom:default_account_id
+      - custom:account_id
+      - custom:account_address
     WriteAttributes:
       - phone_number
       - given_name
@@ -39,4 +40,5 @@ UserPoolClient:
       - preferred_username
       - custom:wallet_address
       - custom:client_id
-      - custom:default_account_id
+      - custom:account_id
+      - custom:account_address

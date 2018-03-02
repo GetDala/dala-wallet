@@ -2,6 +2,7 @@
 
 const AWS = require('aws-sdk');
 const dynamodb = new AWS.DynamoDB.DocumentClient();
+const {InvalidUserAddressCombinationError} = require('../common/Errors');
 
 module.exports.getClient = (username) => {
     const getParams = {
@@ -11,10 +12,20 @@ module.exports.getClient = (username) => {
     return dynamodb.get(getParams).promise().then(result => result.Item);
 }
 
-module.exports.getSavingsAccount = (username) => {
+module.exports.getSavingsAccount = (address, owner) => {
     const getParams = {
-        TableName: 'FineractAccounts',
-        Key: { username }
+        TableName: 'FineractSavingsAccounts',
+        Key: { address }
     };
-    return dynamodb.get(getParams).promise().then(result => result.Item);
+    return dynamodb.get(getParams).promise().then(result => {
+        const {Item} = result;
+        if(Item && owner){
+            if(Item.username === owner)
+                return Item;
+            else
+                throw new InvalidUserAddressCombinationError('Authenticated user does not own address');
+        }else{
+            return Item;
+        }
+    });
 }

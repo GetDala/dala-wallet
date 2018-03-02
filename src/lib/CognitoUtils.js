@@ -2,6 +2,7 @@
 
 const Sub = 'sub';
 const CognitoUsername = 'cognito:username';
+const AccountAddress = 'custom:account_address';
 
 function extractProperty(event, prop) {
     return event.requestContext.authorizer.claims[prop];
@@ -23,4 +24,12 @@ module.exports.getSubFromEvent = (event) => {
 module.exports.getUsernameFromEvent = (event) => {
     let username = extractProperty(event, CognitoUsername);
     return username;
+}
+
+/**
+ * Get the account address for the user
+ * @param {Object} event 
+ */
+module.exports.getAccountAddressFromEvent = (event) => {
+    return extractProperty(event, AccountAddress);
 }

@@ -53,6 +53,16 @@ StateMachine:
                     "End":true
                   }
                 }
+              },
+              {
+                "StartAt":"Set Default Account Address",
+                "States":{
+                  "Set Default Account Address":{
+                    "Type":"Task",
+                    "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-userSetDefaultAccountAddress",
+                    "End":true
+                  }
+                }
               }
             ]
           }

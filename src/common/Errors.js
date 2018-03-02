@@ -22,6 +22,14 @@ class MissingParameterError extends Error {
     }
 }
 
+class InvalidUserAddressCombinationError extends Error {
+    constructor(message){
+        super(message);
+        this.name = 'InvalidUserAddressCombinationError';
+    }
+}
+
 module.exports.ItemAlreadyExistsError = ItemAlreadyExistsError;
 module.exports.InvalidStatusError = InvalidStatusError;
 module.exports.MissingParameterError = MissingParameterError;
+module.exports.InvalidUserAddressCombinationError = InvalidUserAddressCombinationError;

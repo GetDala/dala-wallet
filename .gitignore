@@ -74,3 +74,4 @@ src/microraiden/config.ini
 
 #serverless
 .serverless
+.serverless-secrets.json

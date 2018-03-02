@@ -4,22 +4,22 @@ Table:
   Properties:
     AttributeDefinitions:
       -
-        AttributeName: username
+        AttributeName: address
         AttributeType: S
       -
         AttributeName: savingsId
         AttributeType: N
     KeySchema:
         -
-          AttributeName: username
+          AttributeName: address
           KeyType: HASH
     ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
-    TableName: 'FineractAccounts'
+    TableName: 'FineractSavingsAccounts'
     GlobalSecondaryIndexes:
       -
-        IndexName: idx_fineractAccounts_savingsId
+        IndexName: idx_fineractSavingsAccounts_savingsId
         KeySchema:
           -
             AttributeName: savingsId

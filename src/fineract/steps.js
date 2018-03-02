@@ -13,7 +13,7 @@ module.exports.createClient = (event, context, callback) => {
     if (!surname) return context.fail(new MissingParameterError('surname is required', 'surname'));
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
 
-    return getClient().then(createClient).then(context.succeed).catch(error=>{
+    return getClient().then(createClient).then(context.succeed).catch(error => {
         console.log(JSON.stringify(error));
         context.fail(error);
     });
@@ -54,9 +54,11 @@ module.exports.createClient = (event, context, callback) => {
 
 module.exports.createAccount = (event, context, callback) => {
     const accounts = api.savings();
-    const { username } = event;
+    const { username, encrypted } = event;
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
-
+    if (!encrypted || !encrypted.address) return context.fail(new MissingParameterError('encrypted.address is required'));
+    const { address } = encrypted;
+    
     return getSavingsAccount().then(createSavingsAccount).then(context.succeed).catch(context.fail);
 
     function getClient(payload) {
@@ -69,8 +71,8 @@ module.exports.createAccount = (event, context, callback) => {
 
     function getSavingsAccount(payload) {
         const getParams = {
-            TableName: 'FineractAccounts',
-            Key: { username }
+            TableName: 'FineractSavingsAccounts',
+            Key: { address }
         };
         return dynamodb.get(getParams).promise();
     }
@@ -94,13 +96,13 @@ module.exports.createAccount = (event, context, callback) => {
                 locale: 'en',
                 dateFormat: 'dd MMMM yyyy',
                 submittedOnDate: moment.utc().format('DD MMMM YYYY'),
-                externalId: username
+                externalId: address
             };
             return accounts.create(payload);
         }).then(account => {
-            const fa = Object.assign({}, { username }, account);
+            const fa = Object.assign({}, { address, username, encrypted }, account);
             var putParams = {
-                TableName: 'FineractAccounts',
+                TableName: 'FineractSavingsAccounts',
                 Item: fa
             };
             return dynamodb.put(putParams).promise().then(() => accounts.get(fa.savingsId));
@@ -112,8 +114,10 @@ module.exports.createAccount = (event, context, callback) => {
 
 module.exports.approveAccount = (event, context, callback) => {
     const savings = api.savings();
-    const {username} = event;
+    const { username, encrypted } = event;
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
+    if (!encrypted || !encrypted.address) return context.fail(new MissingParameterError('encrypted.address is required'));
+    const { address } = encrypted;
 
     return getSavingsAccount().then(approve).then(context.succeed).catch(error => {
         log.error({ error, event, context }, 'error in approve');
@@ -122,23 +126,25 @@ module.exports.approveAccount = (event, context, callback) => {
 
     function getSavingsAccount(payload) {
         const getParams = {
-            TableName: 'FineractAccounts',
-            Key: { username }
+            TableName: 'FineractSavingsAccounts',
+            Key: { address }
         };
         return dynamodb.get(getParams).promise();
     }
 
     function approve(result) {
         let fa = result.Item;
-        if (!fa) return Promise.reject(new Error(`No entry in FineractAccounts for ${username}`));
+        if (!fa) return Promise.reject(new Error(`No entry in FineractSavingsAccounts for ${address}`));
         return savings.approve(fa.savingsId);
     }
 }
 
 module.exports.activateAccount = (event, context, callback) => {
     const savings = api.savings();
-    const {username} = event;
+    const { username, encrypted } = event;
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
+    if (!encrypted || !encrypted.address) return context.fail(new MissingParameterError('encrypted.address is required'));
+    const { address } = encrypted;
 
     return getSavingsAccount().then(activate).then(context.succeed).catch(error => {
         log.error({ error, event, context }, 'error in activate');
@@ -147,15 +153,15 @@ module.exports.activateAccount = (event, context, callback) => {
 
     function getSavingsAccount(payload) {
         const getParams = {
-            TableName: 'FineractAccounts',
-            Key: { username }
+            TableName: 'FineractSavingsAccounts',
+            Key: { address }
         };
         return dynamodb.get(getParams).promise();
     }
 
     function activate(result) {
         let fa = result.Item;
-        if (!fa) return Promise.reject(new Error(`No entry in FineractAccounts for ${username}`));
+        if (!fa) return Promise.reject(new Error(`No entry in FineractSavingsAccounts for ${address}`));
         return savings.activate(fa.savingsId);
     }
 }

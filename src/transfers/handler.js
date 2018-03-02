@@ -12,13 +12,14 @@ const { getClient, getSavingsAccount } = require('../fineract/utils');
 
 module.exports.createInternalTransfer = (event, context, callback) => {
     const userId = CognitoUtils.getUsernameFromEvent(event);
+    const address = CognitoUtils.getAccountAddressFromEvent(event);
     const body = JSON.parse(event.body);
     return internalTransfer().then(result => {
         console.log(JSON.stringify(result));
         return context.succeed({
             statusCode: 200,
             body: JSON.stringify({
-                from: userId,
+                from: address,
                 to: body.to,
                 amount: body.amount
             })
@@ -27,7 +28,7 @@ module.exports.createInternalTransfer = (event, context, callback) => {
 
     function internalTransfer() {
         return Promise.all([
-            getSavingsAccount(userId),
+            getSavingsAccount(address),
             getSavingsAccount(body.to)
         ]).then(([fromAccount, toAccount]) => {
             const payload = {

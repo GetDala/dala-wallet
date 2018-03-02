@@ -62,7 +62,7 @@ provider:
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTokenEvents
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWallets
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTransfers
-        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractAccounts
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractSavingsAccounts
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractClients
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractDeposits
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractTransfers
@@ -296,7 +296,12 @@ functions:
           method: post
           cors: true
   
-  #api endpoints 
+  #api endpoints
+  userSetDefaultAccountAddress:
+    handler: src/users/steps.setDefaultAccountAddress 
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
   userSetClientId:
     handler: src/users/steps.setClientId
     environment:

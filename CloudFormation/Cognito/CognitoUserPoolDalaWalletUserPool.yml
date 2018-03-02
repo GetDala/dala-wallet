@@ -45,7 +45,13 @@ UserPool:
         AttributeDataType: String
         DeveloperOnlyAttribute: False
         Mutable: True
-        Name: "default_account_id"
+        Name: "account_id"
+        Required: False 
+      -
+        AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "account_address"
         Required: False 
     SmsConfiguration:
       ExternalId: "fcdb3d00-1220-11e8-b460-0b94ee62a26c"

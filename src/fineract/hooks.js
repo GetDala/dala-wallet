@@ -52,7 +52,7 @@ module.exports.onWebhook = (event, context, callback) => {
             const { id, externalId, status, active, firstname, lastname, displayName, activationDate } = client;
             return {
                 eventType: getEventType(`${entity}:${action}`),
-                clientId: id,
+                // clientId: id,
                 username: externalId,
                 status: status.value,
                 activationDate: {
@@ -80,15 +80,14 @@ module.exports.onWebhook = (event, context, callback) => {
         ]).then(([client, savings]) => {
             return {
                 eventType: getEventType(`${entity}:${action}`),
-                clientId: savings.clientId,
-                accountId: savings.id,
-                username: savings.externalId,
+                address: savings.externalId,
+                username: client.externalId,
                 accountType: savings.savingsProductName,
                 status: savings.status.value,
                 balance: savings.summary.accountBalance
             }
         }).then(payload => {
-            return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload, context).save();
+            return new DalaWalletEvent(payload.accountId, EventTypes.WebhookReceived, payload, context).save();
         }).then(() => {
             return context.succeed({
                 statusCode: 200
@@ -108,14 +107,12 @@ module.exports.onWebhook = (event, context, callback) => {
                 return {
                     eventType: getEventType(`${entity}:${action}`),
                     from: {
-                        clientId: transfer.fromClient.id,
-                        accountId: transfer.fromAccount.id,
-                        username: fromAccount.externalId
+                        address: fromAccount.externalId,
+                        username: fromClient.externalId
                     },
                     to: {
-                        clientId: transfer.toClient.id,
-                        accountId: transfer.toAccount.id,
-                        username: toAccount.externalId
+                        address: toAccount.externalId,
+                        username: toClient.externalId
                     },
                     amount: transfer.transferAmount,
                     date: {
@@ -127,7 +124,7 @@ module.exports.onWebhook = (event, context, callback) => {
                 }
             })
         }).then(payload => {
-            return new DalaWalletEvent(`${payload.from.username}:${payload.to.username}`, EventTypes.WebhookReceived, payload, context).save()
+            return new DalaWalletEvent(`${payload.from.address}:${payload.to.address}`, EventTypes.WebhookReceived, payload, context).save()
         }).then(() => {
             return context.succeed({
                 statusCode: 200

@@ -10,8 +10,23 @@ StateMachine:
             "Choices":[
               {
                 "Variable":"$.eventType",
-                "StringEquals":"SAVINGSACCOUNT:ACTIVATE",
+                "StringEquals":"dala-wallet:created",
                 "Next":"On Wallet Created"
+              },
+              {
+                "Variable":"$.eventType",
+                "StringEquals":"dala-wallet:internal-transfer",
+                "Next":"On Internal Transfer"
+              },
+              {
+                "Variable":"$.eventType",
+                "StringEquals":"dala-wallet:deposit",
+                "Next":"On Deposit"
+              },
+              {
+                "Variable":"$.eventType",
+                "StringEquals":"dala-wallet:withdrawal",
+                "Next":"On Withdrawal"
               }
             ],
             "Default":"End"
@@ -20,6 +35,24 @@ StateMachine:
             "Type":"Task",
             "ResultPath":"$.notificationResult",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-onSuccessfulCreateWallet",
+            "End":true
+          },
+          "On Internal Transfer":{
+            "Type":"Task",
+            "ResultPath":"$.notificationResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-onSuccessfulTransfer",
+            "End":true
+          },
+          "On Deposit":{
+            "Type":"Task",
+            "ResultPath":"$.notificationResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-onSuccessfulDeposit",
+            "End":true
+          },
+          "On Withdrawal":{
+            "Type":"Task",
+            "ResultPath":"$.notificationResult",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-onSuccessfulWithdrawal",
             "End":true
           },
           "End":{
