@@ -8,23 +8,23 @@ const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js'
 const AWS = require('aws-sdk');
 const documentClient = new AWS.DynamoDB.DocumentClient({ region: 'eu-west-1' });
 
-const secret = require('../../secret');
-const RPC_SERVER = secret.rpcServer;
-const PRIVATE_KEY = secret.privateKey;
-const TOKEN_ADDRESS = secret.tokenAddress;
+//const secret = require('../../secret');
+const RPC_SERVER = process.env.RPC_SERVER;
+//const PRIVATE_KEY = secret.privateKey;
+const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS;
 const contract = require('../../lib/DalaToken.json');
 
 const DalaToken = TruffleContract(contract);
 
-const wallet = ethereumjsWallet.fromPrivateKey(new Buffer(PRIVATE_KEY, 'hex'));
+//const wallet = ethereumjsWallet.fromPrivateKey(new Buffer(PRIVATE_KEY, 'hex'));
 const engine = new ProviderEngine();
 engine.addProvider(new FilterSubprovider());
-engine.addProvider(new WalletSubprovider(wallet, {}));
+//engine.addProvider(new WalletSubprovider(wallet, {}));
 engine.addProvider(new Web3Subprovider(new Web3.providers.HttpProvider(RPC_SERVER)));
 engine.start();
 
 DalaToken.setProvider(engine);
-DalaToken.defaults({ from: secret.fromAddress, gas: secret.gas });
+//DalaToken.defaults({ from: secret.fromAddress, gas: secret.gas });
 
 DalaToken.at(TOKEN_ADDRESS).then(token => {
     token.Transfer().watch(createEvent);
