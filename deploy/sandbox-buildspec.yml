@@ -1,0 +1,21 @@
+version: 0.2
+
+env:
+  parameter-store:
+    AWS_ACCESS_KEY_ID: SERVERLESS_SANDBOX_AWS_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY: SERVERLESS_SANDBOX_AWS_ACCESS_SECRET
+
+phases:
+  install:
+    commands: 
+      - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile sandbox
+  pre_build:
+    commands:
+      - echo 'serverless version -' `serverless --version`
+      - cd $CODEBUILD_SRC_DIR
+  build:
+    commands:
+      - yarn
+      - serverless deploy --stage dev --profile sandbox
+  post_build:
+    commands:
