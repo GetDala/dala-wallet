@@ -41,7 +41,7 @@ module.exports.setDefaultAccountAddress = (event, context, callback) => {
         UserPoolId: process.env.USER_POOL_ID,
         UserAttributes: [
             {
-                Name: DefaultAccountIdAttribute,
+                Name: DefaultAccountAddressAttribute,
                 Value: fineractAccount.externalId
             }
         ]

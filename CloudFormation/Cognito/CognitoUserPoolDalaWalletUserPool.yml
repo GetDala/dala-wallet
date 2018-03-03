@@ -1,5 +1,6 @@
 UserPool:
   Type: AWS::Cognito::UserPool
+  DeletionPolicy: Retain
   DependsOn: DalaWalletSMSRole 
   Properties:
     AdminCreateUserConfig: 
