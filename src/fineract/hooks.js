@@ -13,7 +13,7 @@ const EventTypeMaps = {
     [`${Entities.SavingsAccount}:WITHDRAWAL`]: 'dala-wallet:withdrawal',
 }
 
-function getEventType(event){
+function getEventType(event) {
     const result = EventTypeMaps[event];
     return result || event;
 }
@@ -76,16 +76,18 @@ module.exports.onWebhook = (event, context, callback) => {
     function handleSavingsAccountWebhook() {
         return Promise.all([
             clients.get(body.clientId),
-            savings.get(body.savingsId)
-        ]).then(([client, savings]) => {
-            return {
+            savings.get(body.savingsId),
+            (body.resourceId ? savings.getTransaction(body.savingsId, body.resourceId) : Promise.resolve(null))
+        ]).then(([client, savings, transaction]) => {
+            const result = {
                 eventType: getEventType(`${entity}:${action}`),
                 address: savings.externalId,
                 username: client.externalId,
                 accountType: savings.savingsProductName,
                 status: savings.status.value,
-                balance: savings.summary.accountBalance
-            }
+                balance: savings.summary.accountBalance,
+                transaction
+            };
         }).then(payload => {
             return new DalaWalletEvent(payload.accountId, EventTypes.WebhookReceived, payload, context).save();
         }).then(() => {
@@ -103,16 +105,19 @@ module.exports.onWebhook = (event, context, callback) => {
                 clients.get(transfer.toClient.id),
                 savings.get(transfer.fromAccount.id),
                 savings.get(transfer.toAccount.id)
-            ]).then(([fromClient, toClient, fromAccount, toAccount])=>{
+            ]).then(([fromClient, toClient, fromAccount, toAccount]) => {
                 return {
                     eventType: getEventType(`${entity}:${action}`),
+                    transactionId: body.resourceId,
                     from: {
                         address: fromAccount.externalId,
-                        username: fromClient.externalId
+                        username: fromClient.externalId,
+                        balance: fromAccount.summary.accountBalance
                     },
                     to: {
                         address: toAccount.externalId,
-                        username: toClient.externalId
+                        username: toClient.externalId,
+                        balance: toAccount.summary.accountBalance
                     },
                     amount: transfer.transferAmount,
                     date: {
