@@ -36,7 +36,18 @@ module.exports.onWebhook = (event, context, callback) => {
         case Entities.Client:
             return handleClientWebhook();
         case Entities.SavingsAccount:
-            return handleSavingsAccountWebhook();
+            switch(action){
+                case 'ACTIVATE':
+                    return handleSavingsAccountWebhook(false);
+                case 'DEPOSIT':
+                    return handleSavingsAccountWebhook(true);
+                case 'WITHDRAWAL':
+                    return handleSavingsAccountWebhook(true);
+                default:
+                    return context.succeed({
+                        statusCode: 200
+                    });
+            }
         case Entities.AccountTransfer:
             return handleAccountTransferWebhook();
         default:
@@ -73,13 +84,13 @@ module.exports.onWebhook = (event, context, callback) => {
         })
     }
 
-    function handleSavingsAccountWebhook() {
+    function handleSavingsAccountWebhook(isTransaction) {
         return Promise.all([
             clients.get(body.clientId),
             savings.get(body.savingsId),
-            (body.resourceId ? savings.getTransaction(body.savingsId, body.resourceId) : Promise.resolve(null))
+            (isTransaction ? savings.getTransaction(body.savingsId, body.resourceId) : Promise.resolve(null))
         ]).then(([client, savings, transaction]) => {
-            const result = {
+            return {
                 eventType: getEventType(`${entity}:${action}`),
                 address: savings.externalId,
                 username: client.externalId,

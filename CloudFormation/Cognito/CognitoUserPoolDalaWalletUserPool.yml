@@ -11,8 +11,6 @@ UserPool:
         SMSMessage: "Your Dala username is {username} and temporary password is {####}."
       UnusedAccountValidityDays: 7
     AliasAttributes:
-      - phone_number
-      - email
       - preferred_username
     AutoVerifiedAttributes: 
       - phone_number

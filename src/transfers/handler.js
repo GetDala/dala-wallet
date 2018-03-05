@@ -9,6 +9,7 @@ const { EventTypes } = require('../common/constants');
 const api = require('../fineract/api');
 const transfers = api.accounttransfers();
 const { getClient, getSavingsAccount } = require('../fineract/utils');
+const Big = require('big.js');
 
 module.exports.createInternalTransfer = (event, context, callback) => {
     const userId = CognitoUtils.getUsernameFromEvent(event);
@@ -43,7 +44,7 @@ module.exports.createInternalTransfer = (event, context, callback) => {
                 transferDate: moment.utc().format('DD MMMM YYYY'),
                 locale: 'en',
                 dateFormat: 'dd MMMM yyyy',
-                transferAmount: body.amount,
+                transferAmount: Number(new Big(body.amount).round(6)),
                 transferDescription: body.description
             };
             console.log(JSON.stringify(payload));

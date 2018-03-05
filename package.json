@@ -8,6 +8,7 @@
   "dependencies": {
     "@raiden_network/microraiden": "^0.2.0",
     "aws-sdk": "^2.201.0",
+    "big.js": "^5.0.3",
     "ethereumjs-tx": "^1.3.3",
     "ethereumjs-util": "^5.1.4",
     "ethereumjs-wallet": "^0.6.0",
