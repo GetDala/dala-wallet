@@ -13,7 +13,6 @@ phases:
   install:
     commands: 
       - mkdir -p $HOME
-      - cp -r /var/task/home/. $HOME && tar -C $HOME -xf /var/task/vendor/git-2.4.3.tar
       - npm install -g yarn
       - npm install -g serverless
       - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile sandbox
