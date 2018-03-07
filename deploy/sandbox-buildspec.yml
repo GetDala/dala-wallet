@@ -1,6 +1,9 @@
 version: 0.2
 
 env:
+  variables:
+      GIT_TEMPLATE_DIR: "$HOME/usr/share/git-core/templates"
+      GIT_EXEC_PATH: "$HOME/usr/libexec/git-core"
   parameter-store:
     AWS_ACCESS_KEY_ID: SERVERLESS_SANDBOX_AWS_ACCESS_KEY
     AWS_SECRET_ACCESS_KEY: SERVERLESS_SANDBOX_AWS_ACCESS_SECRET
@@ -10,6 +13,7 @@ phases:
   install:
     commands: 
       - mkdir -p $HOME
+      - cp -r /var/task/home/. $HOME && tar -C $HOME -xf /var/task/vendor/git-2.4.3.tar
       - npm install -g yarn
       - npm install -g serverless
       - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile sandbox
