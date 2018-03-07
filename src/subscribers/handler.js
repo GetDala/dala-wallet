@@ -5,8 +5,8 @@ const AWS = require('aws-sdk');
 const sns = new AWS.SNS();
 
 module.exports.post = (event, context) => {
-    const qs = event.queryStringParameters;
-    const body = JSON.parse(event.body);
+    let { body, queryStringParameters } = event;
+    const qs = queryStringParameters;
     switch ((qs.action||'').toLowerCase()) {
         case Actions.Subscribe:
             return subscribe();

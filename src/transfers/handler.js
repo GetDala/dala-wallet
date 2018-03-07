@@ -3,18 +3,24 @@
 const web3 = require('web3');
 const moment = require('moment');
 const CognitoUtils = require('../lib/CognitoUtils');
-const { TransferTypes } = require('./constants');
 const DalaWalletEvent = require('../model/DalaWalletEvent');
 const { EventTypes } = require('../common/constants');
 const api = require('../fineract/api');
 const transfers = api.accounttransfers();
-const { getClient, getSavingsAccount } = require('../fineract/utils');
+const { getSavingsAccount } = require('../fineract/utils');
 const Big = require('big.js');
 
-module.exports.createInternalTransfer = (event, context, callback) => {
-    const userId = CognitoUtils.getUsernameFromEvent(event);
-    // const address = CognitoUtils.getAccountAddressFromEvent(event);
-    const body = JSON.parse(event.body);
+module.exports.createInternalTransfer = (event, context) => {
+    let { headers, body } = event;
+    let username;
+    if (headers.paywall) {
+        //decoded parameters should be in the headers
+        username = headers.username;
+    } else {
+        //will need to decode auth header from cognito
+        username = CognitoUtils.getUsernameFromEvent(event);
+        body = JSON.parse(body);
+    }
     return internalTransfer().then(result => {
         console.log(JSON.stringify(result));
         return context.succeed({
@@ -29,7 +35,7 @@ module.exports.createInternalTransfer = (event, context, callback) => {
 
     function internalTransfer() {
         return Promise.all([
-            getSavingsAccount(body.from, userId),
+            getSavingsAccount(body.from, username),
             getSavingsAccount(body.to)
         ]).then(([fromAccount, toAccount]) => {
             const payload = {
@@ -59,10 +65,18 @@ module.exports.createInternalTransfer = (event, context, callback) => {
     }
 }
 
-module.exports.createExternalTransfer = (event, context, callback) => {
-    const userId = CognitoUtils.getUsernameFromEvent(event);
-    const body = JSON.parse(event.body);
-    return externalTransfer().then(result => {
+module.exports.createExternalTransfer = (event, context) => {
+    let { headers, body } = event;
+    let username;
+    if (headers.paywall) {
+        //decoded parameters should be in the headers
+        username = headers.username;
+    } else {
+        //will need to decode auth header from cognito
+        username = CognitoUtils.getUsernameFromEvent(event);
+        body = JSON.parse(body);
+    }
+    return externalTransfer().then(() => {
         return context.succeed({
             statusCode: 202,
             body: 'transfer is being processed'
@@ -76,10 +90,10 @@ module.exports.createExternalTransfer = (event, context, callback) => {
                 body: `${body.to} is not a valid Ethereum address`
             });
         }
-        return new DalaWalletEvent(userId, EventTypes.ExternalTransfer, {
-            from: userId,
+        return new DalaWalletEvent(username, EventTypes.ExternalTransfer, {
+            from: username,
             to: body.to,
             amount: body.amount
-        }, Object.assign({}, context, { userId })).save();
+        }, Object.assign({}, context, { username })).save();
     }
 }
