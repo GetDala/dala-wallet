@@ -9,6 +9,8 @@ env:
 phases:
   install:
     commands: 
+      - npm install -g yarn
+      - npm install -g serverless
       - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile sandbox
   pre_build:
     commands:
@@ -20,3 +22,6 @@ phases:
       - serverless deploy --stage dev --profile sandbox
   post_build:
     commands:
+  artifacts:
+    files: 
+      - '**/*'
