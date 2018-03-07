@@ -6,7 +6,7 @@ const DefaultAccountAddressAttribute = 'custom:account_address';
 const AWS = require('aws-sdk');
 const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
-module.exports.setClientId = (event, context, callback) => {
+module.exports.setClientId = (event, context) => {
     const { username, fineractClient } = event;
     cognitoIdentityServiceProvider.adminUpdateUserAttributes({
         Username: username,
@@ -20,7 +20,7 @@ module.exports.setClientId = (event, context, callback) => {
     }).promise().then(context.succeed).catch(context.fail);
 }
 
-module.exports.setDefaultAccountId = (event, context, callback) => {
+module.exports.setDefaultAccountId = (event, context) => {
     const { username, fineractAccount } = event;
     cognitoIdentityServiceProvider.adminUpdateUserAttributes({
         Username: username,
@@ -34,15 +34,15 @@ module.exports.setDefaultAccountId = (event, context, callback) => {
     }).promise().then(context.succeed).catch(context.fail);
 }
 
-module.exports.setDefaultAccountAddress = (event, context, callback) => {
-    const { username, fineractAccount } = event;
+module.exports.setDefaultAccountAddress = (event, context) => {
+    const { username, encrypted } = event;
     cognitoIdentityServiceProvider.adminUpdateUserAttributes({
         Username: username,
         UserPoolId: process.env.USER_POOL_ID,
         UserAttributes: [
             {
                 Name: DefaultAccountAddressAttribute,
-                Value: fineractAccount.externalId
+                Value: `0x${encrypted.address}`
             }
         ]
     }).promise().then(context.succeed).catch(context.fail);

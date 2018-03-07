@@ -4,10 +4,9 @@ const { Actions } = require('./constants');
 const AWS = require('aws-sdk');
 const sns = new AWS.SNS();
 
-module.exports.post = (event, context, callback) => {
+module.exports.post = (event, context) => {
     const qs = event.queryStringParameters;
     const body = JSON.parse(event.body);
-    const headers = event.headers;
     switch ((qs.action||'').toLowerCase()) {
         case Actions.Subscribe:
             return subscribe();

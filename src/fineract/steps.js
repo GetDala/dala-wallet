@@ -6,9 +6,9 @@ const dynamodb = new AWS.DynamoDB.DocumentClient();
 const api = require('./api');
 const { MissingParameterError } = require('../common/Errors');
 
-module.exports.createClient = (event, context, callback) => {
+module.exports.createClient = (event, context) => {
     const clients = api.clients();
-    const { firstName, surname, username, phoneNumber, email } = event;
+    const { firstName, surname, username, phoneNumber } = event;
     if (!firstName) return context.fail(new MissingParameterError('firstName is required', 'firstName'));
     if (!surname) return context.fail(new MissingParameterError('surname is required', 'surname'));
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
@@ -18,7 +18,7 @@ module.exports.createClient = (event, context, callback) => {
         context.fail(error);
     });
 
-    function getClient(payload) {
+    function getClient() {
         const getParams = {
             TableName: 'FineractClients',
             Key: { username }
@@ -52,16 +52,16 @@ module.exports.createClient = (event, context, callback) => {
     }
 }
 
-module.exports.createAccount = (event, context, callback) => {
+module.exports.createAccount = (event, context) => {
     const accounts = api.savings();
     const { username, encrypted } = event;
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
     if (!encrypted || !encrypted.address) return context.fail(new MissingParameterError('encrypted.address is required'));
-    const { address } = encrypted;
+    const address = `0x${encrypted}`;
     
     return getSavingsAccount().then(createSavingsAccount).then(context.succeed).catch(context.fail);
 
-    function getClient(payload) {
+    function getClient() {
         const getParams = {
             TableName: 'FineractClients',
             Key: { username }
@@ -69,7 +69,7 @@ module.exports.createAccount = (event, context, callback) => {
         return dynamodb.get(getParams).promise();
     }
 
-    function getSavingsAccount(payload) {
+    function getSavingsAccount() {
         const getParams = {
             TableName: 'FineractSavingsAccounts',
             Key: { address }
@@ -108,23 +108,18 @@ module.exports.createAccount = (event, context, callback) => {
             return dynamodb.put(putParams).promise().then(() => accounts.get(fa.savingsId));
         });
     }
-
-    return context.succeed(event);
 }
 
-module.exports.approveAccount = (event, context, callback) => {
+module.exports.approveAccount = (event, context) => {
     const savings = api.savings();
     const { username, encrypted } = event;
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
     if (!encrypted || !encrypted.address) return context.fail(new MissingParameterError('encrypted.address is required'));
     const { address } = encrypted;
 
-    return getSavingsAccount().then(approve).then(context.succeed).catch(error => {
-        log.error({ error, event, context }, 'error in approve');
-        return context.fail(error);
-    });
+    return getSavingsAccount().then(approve).then(context.succeed).catch(context.fail);
 
-    function getSavingsAccount(payload) {
+    function getSavingsAccount() {
         const getParams = {
             TableName: 'FineractSavingsAccounts',
             Key: { address }
@@ -139,19 +134,16 @@ module.exports.approveAccount = (event, context, callback) => {
     }
 }
 
-module.exports.activateAccount = (event, context, callback) => {
+module.exports.activateAccount = (event, context) => {
     const savings = api.savings();
     const { username, encrypted } = event;
     if (!username) return context.fail(new MissingParameterError('username is required', 'username'));
     if (!encrypted || !encrypted.address) return context.fail(new MissingParameterError('encrypted.address is required'));
     const { address } = encrypted;
 
-    return getSavingsAccount().then(activate).then(context.succeed).catch(error => {
-        log.error({ error, event, context }, 'error in activate');
-        return context.fail(error);
-    });
+    return getSavingsAccount().then(activate).then(context.succeed).catch(context.fail);
 
-    function getSavingsAccount(payload) {
+    function getSavingsAccount() {
         const getParams = {
             TableName: 'FineractSavingsAccounts',
             Key: { address }

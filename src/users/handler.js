@@ -2,14 +2,13 @@
 
 const { EventTypes } = require('../common/constants');
 const DalaWalletEvent = require('../model/DalaWalletEvent');
-const uuid = require('uuid');
 const AWS = require('aws-sdk');
 const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
 const Web3EthAccounts = require('web3-eth-accounts');
 const secretsClient = require('serverless-secrets/client');
 const secretsPromise = secretsClient.load();
 
-module.exports.authenticate = (event, context, callback) => {
+module.exports.authenticate = (event, context) => {
     const body = JSON.parse(event.body);
     const { username, password } = body;
     cognitoIdentityServiceProvider.adminInitiateAuth({
@@ -32,7 +31,7 @@ module.exports.authenticate = (event, context, callback) => {
     });
 }
 
-module.exports.register = (event, context, callback) => {
+module.exports.register = (event, context) => {
     const body = JSON.parse(event.body);
     const { username, password, phoneNumber, email, firstName, surname } = body;
     if (!firstName) return context.succeed({
@@ -50,9 +49,6 @@ module.exports.register = (event, context, callback) => {
         const accounts = new Web3EthAccounts(process.env.RPC_SERVER);
         const account = accounts.create();
         const encrypted = accounts.encrypt(account.privateKey, password);
-        // const encrypted = {
-        //     address: uuid.v1()
-        // };
         return Promise.resolve(encrypted);
     }
 
@@ -134,7 +130,7 @@ module.exports.register = (event, context, callback) => {
                 const body = JSON.stringify({
                     authToken: data.AuthenticationResult.IdToken,
                     expiresIn: data.AuthenticationResult.ExpiresIn,
-                    address: encrypted.address
+                    address: `0x${encrypted.address}`
                 })
                 return context.succeed({
                     statusCode: 200,

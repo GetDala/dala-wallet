@@ -25,11 +25,10 @@ const savings = api.savings();
 const clients = api.clients();
 const transfers = api.accounttransfers();
 
-module.exports.onWebhook = (event, context, callback) => {
+module.exports.onWebhook = (event, context) => {
     console.log(JSON.stringify(event));
     const body = JSON.parse(event.body);
     const action = event.headers['X-Fineract-Action'];
-    const endpoint = event.headers['X-Fineract-Endpoint'];
     const entity = event.headers['X-Fineract-Entity'];
 
     switch (entity) {
@@ -60,10 +59,9 @@ module.exports.onWebhook = (event, context, callback) => {
     function handleClientWebhook() {
         //get client 
         return clients.get(body.clientId).then(client => {
-            const { id, externalId, status, active, firstname, lastname, displayName, activationDate } = client;
+            const { externalId, status, firstname, lastname, displayName, activationDate } = client;
             return {
                 eventType: getEventType(`${entity}:${action}`),
-                // clientId: id,
                 username: externalId,
                 status: status.value,
                 activationDate: {

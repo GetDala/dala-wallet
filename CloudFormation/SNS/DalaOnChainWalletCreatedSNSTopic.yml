@@ -1,0 +1,4 @@
+Topic:
+  Type: AWS::SNS::Topic
+  Properties:
+    DisplayName: "Dala On Chain Wallet Created Topic"

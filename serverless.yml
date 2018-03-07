@@ -25,12 +25,13 @@ provider:
     FINERACT_TENANT_IDENTIFIER: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_TENANT_IDENTIFIER}
     FINERACT_API_ENDPOINT_BASE: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_API_ENDPOINT_BASE}
     DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
+    ON_CHAIN_WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaOnChainWalletCreatedSNSTopicArn.Value}
     WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
     TRANSFER_TOPIC: ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
     WITHDRAWAL_TOPIC: ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
     DEFAULT_GAS: ${self:custom.profiles.${self:provider.stage}.DEFAULT_GAS}
     ON_TOKEN_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
-    ON_CREATE_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
+    ON_CREATE_ON_CHAIN_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateOnChainWalletStateMachineArn.Value}
     ON_USER_CONFIRMED_STATE_MACHINE: ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
     ON_WEBHOOK_RECEIVED_STATE_MACHINE: ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
     ON_EXTERNAL_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnExternalTransferStateMachineArn.Value}
@@ -45,7 +46,7 @@ provider:
         - states:StartExecution
       Resource:
         - ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
-        - ${self:resources.Outputs.OnCreateWalletStateMachineArn.Value}
+        - ${self:resources.Outputs.OnCreateOnChainWalletStateMachineArn.Value}
         - ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
         - ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
         - ${self:resources.Outputs.OnExternalTransferStateMachineArn.Value}
@@ -119,6 +120,20 @@ functions:
               - DalaWalletEventsDynamoDbTable
               - StreamArn
   #notification steps
+  onSuccessfulCreateOnChainWallet:
+    handler: src/notifications/steps.onSuccessfulCreateOnChainWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedCreateOnChainWallet:
+    handler: src/notifications/steps.onFailedCreateOnChainWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
   onSuccessfulCreateWallet:
     handler: src/notifications/steps.onSuccessfulCreateWallet
     package:
@@ -295,8 +310,6 @@ functions:
           path: v1/fineract-webhooks
           method: post
           cors: true
-  
-  #api endpoints
   userSetDefaultAccountAddress:
     handler: src/users/steps.setDefaultAccountAddress 
     environment:
@@ -312,6 +325,7 @@ functions:
     environment:
       CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
       USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+  #api endpoints
   authenticate:
     handler: src/users/handler.authenticate
     environment:
@@ -466,6 +480,9 @@ custom:
 
 resources:
   Outputs:
+    DalaOnChainWalletCreatedSNSTopicArn:
+      Value:
+        Ref: DalaOnChainWalletCreatedSNSTopic
     DalaWalletCreatedSNSTopicArn:
       Value:
         Ref: DalaWalletCreatedSNSTopic
@@ -512,9 +529,9 @@ resources:
     CognitoUserPoolDalaWalletUserPoolClientId:
       Value: 
         Ref: CognitoUserPoolDalaWalletUserPoolClient
-    OnCreateWalletStateMachineArn:
+    OnCreateOnChainWalletStateMachineArn:
       Value:
-        Ref: OnCreateWalletStateMachine
+        Ref: OnCreateOnChainWalletStateMachine
     OnTokenTransferStateMachineArn:
       Value:
         Ref: OnTokenTransferStateMachine
@@ -544,11 +561,12 @@ resources:
     DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
     CognitoUserPoolDalaWalletUserPool: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPool.yml):UserPool}
     CognitoUserPoolDalaWalletUserPoolClient: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPoolClient.yml):UserPoolClient}
+    DalaOnChainWalletCreatedSNSTopic: ${file(./CloudFormation/SNS/DalaOnChainWalletCreatedSNSTopic.yml):Topic}
     DalaWalletCreatedSNSTopic: ${file(./CloudFormation/SNS/DalaWalletCreatedSNSTopic.yml):Topic}
     DalaWalletDepositSNSTopic: ${file(./CloudFormation/SNS/DalaWalletDepositSNSTopic.yml):Topic}
     DalaWalletWithdrawalSNSTopic: ${file(./CloudFormation/SNS/DalaWalletWithdrawalSNSTopic.yml):Topic}
     DalaWalletTransferSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
-    OnCreateWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateWalletStateMachine.yml):StateMachine}  
+    OnCreateOnChainWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateOnChainWalletStateMachine.yml):StateMachine}  
     OnTokenTransferStateMachine: ${file(./CloudFormation/StateMachines/OnTokenTransferStateMachine.yml):StateMachine}  
     OnUserConfirmedStateMachine: ${file(./CloudFormation/StateMachines/OnUserConfirmedStateMachine.yml):StateMachine}
     OnWebhookReceivedStateMachine: ${file(./CloudFormation/StateMachines/OnWebhookReceivedStateMachine.yml):StateMachine}

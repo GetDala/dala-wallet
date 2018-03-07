@@ -1,38 +1,43 @@
 'use strict';
 
-const { Topics } = require('./constants');
 const Notifications = require('./Notifications');
-const DalaWalletEvent = require('../model/DalaWalletEvent');
-const { EventTypes } = require('../common/constants');
 
-module.exports.onSuccessfulCreateWallet = (event, context, callback) => {
+module.exports.onSuccessfulCreateOnChainWallet = (event, context) => {
+    return Notifications.sendSuccessfulCreateOnChainWallet(event).then(context.succeed).catch(context.fail);
+}
+
+module.exports.onFailedCreateOnChainWallet = (event, context) => {
+    return Notifications.sendFailedCreateOnChainWallet(event).then(context.succeed).catch(context.fail);
+}
+
+module.exports.onSuccessfulCreateWallet = (event, context) => {
     return Notifications.sendSuccessfulCreateWallet(event).then(context.succeed).catch(context.fail);
 }
 
-module.exports.onFailedCreateWallet = (event, context, callback) => {
+module.exports.onFailedCreateWallet = (event, context) => {
     return Notifications.sendFailedCreateWallet(event).then(context.succeed).catch(context.fail);
 }
 
-module.exports.onSuccessfulTransfer = (event, context, callback) => {
+module.exports.onSuccessfulTransfer = (event, context) => {
     return Notifications.sendSuccessfulTransfer(event).then(context.succeed).catch(context.fail);
 }
 
-module.exports.onFailedTransfer = (event, context, callback) => {
+module.exports.onFailedTransfer = (event, context) => {
     return Notifications.sendFailedTransfer(event).then(context.succeed).catch(context.fail);
 }
 
-module.exports.onSuccessfulDeposit = (event, context, callback) => {
+module.exports.onSuccessfulDeposit = (event, context) => {
     return Notifications.sendSuccessfulDeposit(event).then(context.succeed).catch(context.fail);
 }
 
-module.exports.onFailedDeposit = (event, context, callback) => {
+module.exports.onFailedDeposit = (event, context) => {
     return Notifications.sendFailedDeposit(event).then(context.succeed).catch(context.fail);
 }
 
-module.exports.onSuccessfulWithdrawal = (event, context, callback) => {
+module.exports.onSuccessfulWithdrawal = (event, context) => {
     return Notifications.sendSuccessfulWithdrawal(event).then(context.succeed).catch(context.fail);
 }
 
-module.exports.onFailedWithdrawal = (event, context, callback) => {
+module.exports.onFailedWithdrawal = (event, context) => {
     return Notifications.sendFailedWithdrawal(event).then(context.succeed).catch(context.fail);
 }
