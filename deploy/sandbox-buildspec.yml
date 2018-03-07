@@ -9,8 +9,6 @@ env:
 phases:
   install:
     commands: 
-      - mkdir -p $HOME
-      - yum install -y git
       - npm install -g yarn
       - npm install -g serverless
       - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile sandbox
