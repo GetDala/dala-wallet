@@ -5,7 +5,7 @@ const DalaWalletEvent = require('../model/DalaWalletEvent');
 const uuid = require('uuid');
 const AWS = require('aws-sdk');
 const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
-// const Web3EthAccounts = require('web3-eth-accounts');
+const Web3EthAccounts = require('web3-eth-accounts');
 const secretsClient = require('serverless-secrets/client');
 const secretsPromise = secretsClient.load();
 
@@ -47,12 +47,12 @@ module.exports.register = (event, context, callback) => {
     secretsPromise.then(createEthAccount).then(next).catch(context.fail);;
 
     function createEthAccount() {
-        // const accounts = new Web3EthAccounts(process.env.RPC_ADDRESS);
-        // const account = accounts.create();
-        // const encrypted = accounts.encrypt(account.privateKey, password);
-        const encrypted = {
-            address: uuid.v1()
-        };
+        const accounts = new Web3EthAccounts(process.env.RPC_SERVER);
+        const account = accounts.create();
+        const encrypted = accounts.encrypt(account.privateKey, password);
+        // const encrypted = {
+        //     address: uuid.v1()
+        // };
         return Promise.resolve(encrypted);
     }
 
