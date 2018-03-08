@@ -64,6 +64,7 @@ StateMachine:
           },
           "Sweep Tokens":{
             "Type":"Task",
+            "InputPath":"$.args.to",
             "ResultPath":"$.transactionHash",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethSweepWallet",
             "Next":"Get Transaction Receipt"
