@@ -3,7 +3,7 @@
 const AWS = require('aws-sdk');
 const stepFunctions = new AWS.StepFunctions();
 
-module.exports.onDalaTokenEvent = (event, context, callback) => {
+module.exports.onDalaTokenEvent = (event, context) => {
     var promises = event.Records.map(record => {
         if (record.eventName !== 'INSERT') return;
         const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);

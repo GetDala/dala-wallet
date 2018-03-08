@@ -1,6 +1,5 @@
 'use strict';
 
-const moment = require('moment');
 const api = require('../rest');
 const AccountTransfersPath = 'accounttransfers';
 

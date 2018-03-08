@@ -3,7 +3,7 @@
 const { EventTypes } = require('./constants');
 const StreamUtils = require('../lib/StreamUtils');
 
-module.exports.onDalaWalletEvent = (event, context, callback) => {
+module.exports.onDalaWalletEvent = (event, context) => {
     return StreamUtils.startStateMachinePerItem(event, {
         [EventTypes.CreateWallet]: {
             stateMachineArn: process.env.ON_CREATE_ON_CHAIN_WALLET_STATE_MACHINE

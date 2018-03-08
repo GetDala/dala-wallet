@@ -1,13 +1,12 @@
 'use strict';
 
-const _ = require('lodash');
 const Web3 = require('web3');
 const utils = require('./utils');
 const secretsClient = require('serverless-secrets/client');
 const secretsPromise = secretsClient.load();
 const contract = require('../../lib/DalaWallet.json');
 
-module.exports.create = (event, context, callback) => {
+module.exports.create = (event, context) => {
     return secretsPromise.then(() => {
         const { RPC_SERVER, PRIVATE_KEY, FROM_ADDRESS, DEFAULT_GAS, DESTINATION_ADDRESS, TOKEN_ADDRESS, MIN_BALANCE } = process.env;
         const engine = utils.createEngine(RPC_SERVER, PRIVATE_KEY, `0x${FROM_ADDRESS}`);

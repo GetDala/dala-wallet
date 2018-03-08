@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
 const Web3 = require('web3');
 const utils = require('./utils');
 const secretsClient = require('serverless-secrets/client');
@@ -28,7 +27,7 @@ class TransactionNotCompleteError extends Error {
     }
 }
 
-module.exports.getTransactionReceipt = (event, context, callback) => {
+module.exports.getTransactionReceipt = (event, context) => {
     const transactionHash = event;
     return secretsPromise.then(() => {
         const { RPC_SERVER } = process.env;

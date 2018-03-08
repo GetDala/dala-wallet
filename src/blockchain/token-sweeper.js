@@ -5,7 +5,6 @@ const secretsClient = require('serverless-secrets/client');
 const secretsPromise = secretsClient.load();
 const utils = require('./utils');
 const contract = require('../../lib/DalaWallet.json');
-const DalaWallet = TruffleContract(contract);
 
 /** 
  * The sweep event calls sweep on the provided wallet address and returns the resultant transaction hash. It does not indicate whether the transaction was successful or not.
@@ -13,7 +12,7 @@ const DalaWallet = TruffleContract(contract);
  * @param {Object} event
  * @param {string} event.walletAddress - the wallet address that should be swept
 */
-module.exports.sweep = (event, context, callback) => {
+module.exports.sweep = (event, context) => {
     return secretsPromise.then(() => {
         const { RPC_SERVER, PRIVATE_KEY, FROM_ADDRESS, DEFAULT_GAS } = process.env;
         const engine = utils.createEngine(RPC_SERVER, PRIVATE_KEY, `0x${FROM_ADDRESS}`);

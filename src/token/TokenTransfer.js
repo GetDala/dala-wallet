@@ -98,3 +98,5 @@ class TokenTransfer
         });
     }
 }
+
+module.exports = TokenTransfer;
