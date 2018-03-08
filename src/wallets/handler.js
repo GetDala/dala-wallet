@@ -1,6 +1,6 @@
 'use strict';
 
-const EventTypes = require('../common/constants');
+const { EventTypes } = require('../common/constants');
 const CognitoUtils = require('../lib/CognitoUtils');
 const DalaWalletEvent = require('../model/DalaWalletEvent');
 

@@ -17,7 +17,8 @@ module.exports.startStateMachinePerItem = (event, params) => {
     var promises = event.Records.map(record => {
         if (record.eventName !== 'INSERT') return;
         const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
-        const eventType = newItem.eventType || 'Default';
+        const eventType = newItem.eventType;
+        if (!eventType) return Promise.resolve();
         const createInput = (params[eventType].createInput) || ((item) => Promise.resolve(item.payload));
         const getId = params[eventType].getId || ((item) => item.id || uuid.v1());
         return createInput(newItem).then(input => {

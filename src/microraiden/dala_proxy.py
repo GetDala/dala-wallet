@@ -72,13 +72,13 @@ class PaywalledResourceBase(Expensive):
 
     def parseResponse(self, response):
         print('parseResponse', response)
-        if response.StatusCode != 200:
+        if response['StatusCode'] != 200:
             return json.dumps({
                 'statusCode': 500,
-                'body': response.Payload
+                'body': response['Payload']
             })
         else:
-            return json.dumps(response.Payload)
+            return json.dumps(response['Payload'])
 
 
 class PaywalledRegisterUser(PaywalledResourceBase):
