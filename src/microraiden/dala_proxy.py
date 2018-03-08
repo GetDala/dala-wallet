@@ -75,10 +75,10 @@ class PaywalledResourceBase(Expensive):
         if response['StatusCode'] != 200:
             return json.dumps({
                 'statusCode': 500,
-                'body': response['Payload']
+                'body': json.loads(response['Payload'].read().decode("utf-8"))
             })
         else:
-            return json.dumps(response['Payload'])
+            return json.dumps(json.loads(response['Payload'].read().decode("utf-8")))
 
 
 class PaywalledRegisterUser(PaywalledResourceBase):
