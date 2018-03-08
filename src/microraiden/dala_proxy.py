@@ -50,6 +50,7 @@ class PaywalledResourceBase(Expensive):
     def authorizedPost(self, url, lambdaFunction):
         decoded = jwt.decode(request.headers.get(
             'authorization'), verify=False)
+        print('decoded', decoded)
         senderAddress = request.headers.get('rdn-sender-address')
         body = request.json
 
