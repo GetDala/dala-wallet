@@ -55,7 +55,7 @@ class PaywalledResourceBase(Expensive):
         response = lambdaClient.invoke(
             FunctionName=lambdaFunction,
             Payload=json.dumps({
-                'queryStringParameters': json.loads(urllib.unquote(request.query_string.partition('&')[0])),
+                'queryStringParameters': json.loads(urllib.parse.unquote(request.query_string.partition('&')[0])),
                 'headers': {
                     'username': decoded['cognito:username'],
                     'firstName': decoded['given_name'],
