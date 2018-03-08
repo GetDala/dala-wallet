@@ -7,6 +7,7 @@ StateMachine:
         "States": {
           "Processing":{
             "Type":"Task",
+            "ResultPath":"$.processingResult",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-tokenTransferProcessing",
             "Catch":[
               {
@@ -42,25 +43,96 @@ StateMachine:
                 "BackoffRate": 2.0
               }
             ],
+            "Next":"Get Wallet"
+          },
+          "Get Wallet":{
+            "Type":"Task",
+            "InputPath":"$.args.to",
+            "ResultPath":"$.wallet",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-getWalletByAddress",
+            "Catch":[
+              {
+                "ErrorEquals":[
+                  "ItemDoesNotExistError",
+                  "TooManyItemsError"
+                ],
+                "ResultPath":"$.noWalletError",
+                "Next":"Complete"
+              }
+            ],
             "Next":"Sweep Tokens"
           },
           "Sweep Tokens":{
             "Type":"Task",
+            "ResultPath":"$.transactionHash",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethSweepWallet",
+            "Next":"Get Transaction Receipt"
+          },
+          "Get Transaction Receipt":{
+            "Type":"Task",
+            "InputPath":"$.transactionHash",
+            "ResultPath":"$.transactionReceipt",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-ethGetTransactionReceipt",
+            "Retry":[
+              {
+                "ErrorEquals": [
+                  "TransactionNotCompleteError"
+                ],
+                "MaxAttempts":0
+              },
+              {
+                "ErrorEquals": [
+                  "TransactionFailedError"
+                ],
+                "MaxAttempts":0
+              },
+              {
+                "ErrorEquals": [
+                    "States.TaskFailed"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 2,
+                "BackoffRate": 2.0
+              }
+            ],
+            "Catch":[
+              {
+                "ErrorEquals": [
+                  "TransactionNotCompleteError"
+                ], 
+                "ResultPath": "$.transactionNotComplete",
+                "Next": "Wait"
+              },
+              {
+                "ErrorEquals": [
+                  "TransactionFailedError"
+                ], 
+                "ResultPath": "$.transactionFailed",
+                "Next": "Failed"
+              }
+            ],
             "Next":"Transfer"
+          },
+          "Wait":{
+            "Type":"Wait",
+            "Seconds":10,
+            "Next":"Get Transaction Receipt"
           },
           "Transfer":{
             "Type":"Task",
+            "ResultPath":"$.transferResult",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finTransfer",
             "Next":"Complete"
           },
           "Complete":{
             "Type":"Task",
+            "ResultPath":"$.completeResult",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-tokenTransferComplete",
             "End":true
           },
           "Failed":{
             "Type":"Task",
+            "ResultPath":"$.failedResult",
             "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-tokenTransferFailed",
             "End":true
           },

@@ -1,7 +1,7 @@
 'use strict';
 
 const { Statuses } = require('./constants');
-const { ItemAlreadyExistsError, InvalidStatusError } = require('../common/Errors');
+const { ItemAlreadyExistsError, InvalidStatusError, TooManyItemsError, ItemDoesNotExistError } = require('../common/Errors');
 const AWS = require('aws-sdk');
 const documentClient = new AWS.DynamoDB.DocumentClient();
 
@@ -14,6 +14,24 @@ class DalaWallet {
     constructor(username, address = null) {
         this.username = username;
         this.address = address;
+    }
+
+    static getByAddress(address){
+        return documentClient.query({
+            TableName: 'DalaWallets',
+            IndexName: 'idx_dalaWallets_address_timestamp',
+            KeyConditionExpression: '#address = :address',
+            ExpressionAttributeNames: {
+                '#address':'address'
+            },
+            ExpressionAttributeValues: {
+                ':address': address
+            }
+        }).promise().then(result=>{
+            if(result.Count == 0) throw new ItemDoesNotExistError(`Wallet with address ${address} does not exits`);
+            if(result.Count > 1) throw new TooManyItemsError(`There is more than one entry for this wallet with address ${address}`);
+            return result.Item;
+        });
     }
 
     /**

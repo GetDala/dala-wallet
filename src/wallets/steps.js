@@ -2,6 +2,10 @@
 
 const DalaWallet = require('./DalaWallet');
 
+module.exports.getWalletByAddress = (event, context)=>{
+    DalaWallet.getByAddress(event).then(context.succeed).catch(context.fail);
+}
+
 module.exports.walletProcessing = (event, context) => {
     const wallet = new DalaWallet(event.username);
     wallet.processing().then(context.succeed).catch(context.fail);

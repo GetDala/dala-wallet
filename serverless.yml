@@ -223,6 +223,12 @@ functions:
       include:
         - src/wallets/**
         - src/common/**
+  getWalletByAddress:
+    handler: src/wallets/steps.getWalletByAddress
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
   walletCreated:
     handler: src/wallets/steps.walletCreated
     package:

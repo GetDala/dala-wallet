@@ -1,5 +1,19 @@
 'use strict';
 
+class ItemDoesNotExistError extends Error {
+    constructor(message){
+        super(message);
+        this.name = 'ItemDoesNotExistError';
+    }
+}
+
+class TooManyItemsError extends Error {
+    constructor(message){
+        super(message);
+        this.name = 'TooManyItemsError';
+    }
+}
+
 class ItemAlreadyExistsError extends Error {
     constructor(message){
         super(message);
@@ -29,6 +43,8 @@ class InvalidUserAddressCombinationError extends Error {
     }
 }
 
+module.exports.ItemDoesNotExistError = ItemDoesNotExistError;
+module.exports.TooManyItemsError = TooManyItemsError;
 module.exports.ItemAlreadyExistsError = ItemAlreadyExistsError;
 module.exports.InvalidStatusError = InvalidStatusError;
 module.exports.MissingParameterError = MissingParameterError;
