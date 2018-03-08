@@ -22,6 +22,9 @@ provider:
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
   environment:
+    TOKEN_ADDRESS: ${self:custom.profiles.${self:provider.stage}.TOKEN_ADDRESS}
+    MIN_BALANCE: ${self:custom.profiles.${self:provider.stage}.MIN_BALANCE}
+    DESTINATION_ADDRESS: ${self:custom.profiles.${self:provider.stage}.DESTINATION_ADDRESS}
     FINERACT_TENANT_IDENTIFIER: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_TENANT_IDENTIFIER}
     FINERACT_API_ENDPOINT_BASE: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_API_ENDPOINT_BASE}
     DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
