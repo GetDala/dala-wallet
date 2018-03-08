@@ -68,18 +68,20 @@ class DalaWallet {
         const updateParams = {
             TableName: 'DalaWallets',
             Key: { id: this.username },
-            UpdateExpression: 'set #status = :status, #address = :address, #lastUpdated = :lastUpdated',
+            UpdateExpression: 'set #status = :status, #address = :address, #lastUpdated = :lastUpdated, #timestamp = :timestamp',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated',
-                '#address': 'address'
+                '#address': 'address',
+                '#timestamp': 'timestamp'
             },
             ExpressionAttributeValues: {
                 ':currentStatus': Statuses.Processing,
                 ':status': Statuses.Created,
                 ':lastUpdated': new Date().toISOString(),
-                ':address': this.address
+                ':address': this.address,
+                ':timestamp': new Date().toISOString()
             }
         };
         return documentClient.update(updateParams).promise().catch(error => {

@@ -11,7 +11,7 @@ class TokenTransfer
      * 
      * @param {string} id   The ID of the transfer 
      */
-    constructor(id, type){
+    constructor(id){
         this.id = id;
     }
 
@@ -52,7 +52,6 @@ class TokenTransfer
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#id': 'id',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },
@@ -80,7 +79,6 @@ class TokenTransfer
             UpdateExpression: 'set #status = :status, #lastUpdated = :lastUpdated',
             ConditionExpression: '#status = :currentStatus',
             ExpressionAttributeNames: {
-                '#id': 'id',
                 '#status': 'status',
                 '#lastUpdated': 'lastUpdated'
             },
