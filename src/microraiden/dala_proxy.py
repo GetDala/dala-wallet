@@ -61,7 +61,7 @@ class PaywalledResourceBase(Expensive):
                 'headers': {
                     'username': decoded['cognito:username'],
                     'firstName': decoded['given_name'],
-                    'surname': decoded['last_name'],
+                    'surname': decoded['family_name'],
                     'senderAddress': senderAddress,
                     'paywall': True
                 },
