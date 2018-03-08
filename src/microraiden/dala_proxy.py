@@ -5,7 +5,7 @@ import configparser
 import os
 import boto3
 import jwt
-import urllib
+import urllib.parse
 from microraiden.click_helpers import main, pass_app
 from microraiden.proxy.resources import Expensive, PaywalledProxyUrl
 from flask import Response, make_response, request, render_template_string, jsonify
@@ -37,7 +37,7 @@ class PaywalledResourceBase(Expensive):
         response = lambdaClient.invoke(
             FunctionName=lambdaFunction,
             Payload=json.dumps({
-                'queryStringParameters': json.loads(urllib.unquote(request.query_string.partition('&')[0])),
+                'queryStringParameters': json.loads(urllib.parse.unquote(request.query_string.partition('&')[0])),
                 'headers': {
                     'senderAddress': senderAddress,
                     'paywall': True
