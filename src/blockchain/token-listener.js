@@ -39,11 +39,12 @@ function createEvent(error, event) {
             '#id':'id'
         }
     }
-
+    console.log('putParams', putParams);
     documentClient.put(putParams).promise().then(console.log).catch(handleFailed);
 
     function handleFailed(error) {
         if(error.code === 'ConditionalCheckFailedException'){
+            console.log('ConditionalCheckFailed');
             //swallow
         }else{
             console.log(error);
