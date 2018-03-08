@@ -37,7 +37,7 @@ class PaywalledResourceBase(Expensive):
         response = lambdaClient.invoke(
             FunctionName=lambdaFunction,
             Payload=json.dumps({
-                'queryStringParameters': json.dumps(urllib.parse.unquote(request.query_string.partition('&')[0])),
+                'queryStringParameters': json.dumps(urllib.parse.parse_qs(request.query_string),
                 'headers': {
                     'senderAddress': senderAddress,
                     'paywall': True
@@ -52,12 +52,11 @@ class PaywalledResourceBase(Expensive):
             'authorization'), verify=False)
         senderAddress = request.headers.get('rdn-sender-address')
         body = request.json
-        unquoted = urllib.parse.unquote(request.query_string.partition('&')[0])
-        print('unquoted', unquoted)
+
         response = lambdaClient.invoke(
             FunctionName=lambdaFunction,
             Payload=json.dumps({
-                'queryStringParameters': unquoted,
+                'queryStringParameters': json.dumps(urllib.parse.parse_qs(request.query_string),
                 'headers': {
                     'username': decoded['cognito:username'],
                     'firstName': decoded['given_name'],
