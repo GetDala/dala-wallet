@@ -517,16 +517,6 @@ resources:
     CognitoUserPoolDalaWalletUserPoolId:
       Value:
         Ref: CognitoUserPoolDalaWalletUserPool
-    CognitoUserPoolDalaWalletUserPoolProviderName:
-      Value:
-        Fn::GetAtt:
-          - CognitoUserPoolDalaWalletUserPool
-          - ProviderName
-    CognitoUserPoolDalaWalletUserPoolProviderUrl:
-      Value:
-        Fn::GetAtt:
-          - CognitoUserPoolDalaWalletUserPool
-          - ProviderURL
     CognitoUserPoolDalaWalletUserPoolArn:
       Value:
         Fn::GetAtt:
