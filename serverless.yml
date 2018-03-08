@@ -69,6 +69,7 @@ provider:
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractTransfers
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWithdrawals
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/TokenTransfers
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWallets/index/idx_dalaWallets_address_timestamp
     - Effect: Allow
       Action:
         - cognito-idp:AdminCreateUser
