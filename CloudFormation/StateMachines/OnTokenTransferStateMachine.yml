@@ -7,7 +7,7 @@ StateMachine:
         "States": {
           "Processing":{
             "Type":"Task",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-transferProcessing",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-tokenTransferProcessing",
             "Catch":[
               {
                 "ErrorEquals":[
@@ -56,12 +56,12 @@ StateMachine:
           },
           "Complete":{
             "Type":"Task",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-transferComplete",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-tokenTransferComplete",
             "End":true
           },
           "Failed":{
             "Type":"Task",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-transferFailed",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-tokenTransferFailed",
             "End":true
           },
           "End":{
