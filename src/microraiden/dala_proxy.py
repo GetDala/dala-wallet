@@ -70,7 +70,6 @@ class PaywalledResourceBase(Expensive):
         return self.parseResponse(response)
 
     def parseResponse(self, response):
-        print('parseResponse', response)
         if response['StatusCode'] != 200:
             return json.dumps({
                 'statusCode': 500,
