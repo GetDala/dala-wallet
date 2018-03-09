@@ -197,7 +197,7 @@ module.exports.tokenTransferDeposit = (event, context) => {
     wallet,
     sweepTransactionHash
   } = event;
-  return getSavingsAccountByUsername(wallet.username)
+  return getSavingsAccountByUsername(wallet.id)
     .then(account => {
       return savings.deposit(account.savingsId, {
         amount: value,
