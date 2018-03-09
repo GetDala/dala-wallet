@@ -9,6 +9,9 @@ Table:
       -
         AttributeName: savingsId
         AttributeType: N
+      -
+        AttributeName: username
+        AttributeType: S
     KeySchema:
         -
           AttributeName: address
@@ -23,6 +26,17 @@ Table:
         KeySchema:
           -
             AttributeName: savingsId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+      -
+        IndexName: idx_fineractSavingsAccounts_username
+        KeySchema:
+          -
+            AttributeName: username
             KeyType: HASH
         Projection:
           ProjectionType: ALL

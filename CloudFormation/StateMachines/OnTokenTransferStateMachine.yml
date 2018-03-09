@@ -122,7 +122,7 @@ StateMachine:
           "Transfer":{
             "Type":"Task",
             "ResultPath":"$.transferResult",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-tokenTransferDeposit",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-finTokenTransferDeposit",
             "Next":"Complete"
           },
           "Complete":{

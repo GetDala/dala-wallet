@@ -22,6 +22,7 @@ provider:
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
   environment:
+    PAYMENT_TYPE_ON_CHAIN_DEPOSIT: ${self:custom.profiles.${self:provider.stage}.PAYMENT_TYPE_ON_CHAIN_DEPOSIT}
     TOKEN_ADDRESS: ${self:custom.profiles.${self:provider.stage}.TOKEN_ADDRESS}
     MIN_BALANCE: ${self:custom.profiles.${self:provider.stage}.MIN_BALANCE}
     DESTINATION_ADDRESS: ${self:custom.profiles.${self:provider.stage}.DESTINATION_ADDRESS}
@@ -94,6 +95,7 @@ provider:
         - ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
         - ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
         - ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
+        - ${self:resources.Outputs.DalaOnChainWalletCreatedSNSTopicArn.Value}
   apiKeys:
     - ${self:service}-${self:provider.stage}
 
@@ -281,13 +283,14 @@ functions:
       include:
         - src/token/**
         - src/common/**
-  tokenTransferDeposit:
-    handler: src/token/steps.deposit
+  #fineract
+  finTokenTransferDeposit:
+    handler: src/fineract/steps.tokenTransferDeposit
     package:
       include:
-        - src/token/**
+        - src/fineract/**
         - src/common/**
-  #fineract
+        - src/model/**
   finCreateClient:
     handler: src/fineract/steps.createClient
     package:
@@ -485,6 +488,7 @@ custom:
       TOKEN_ADDRESS: "0x5d689a3de1a648f85d23231a2d95fa89ce3d41fc"
       MIN_BALANCE: 0
       DALA_ACCOUNT_PRODUCT: 1
+      PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
   serverlessSecrets:
     providerOptions:
       region: ${self:provider.region}
