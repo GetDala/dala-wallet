@@ -29,7 +29,7 @@ module.exports.getSavingsAccountByUsername = username => {
         "#username": "username"
       },
       ExpressionAttributeValues: {
-        username: username
+        ":username": username
       }
     })
     .promise()
