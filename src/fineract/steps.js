@@ -10,6 +10,7 @@ const {
   getSavingsAccount,
   getClient
 } = require("./utils");
+const { DepositTypes } = require("./constants");
 const { MissingParameterError } = require("../common/Errors");
 
 module.exports.createClient = (event, context) => {
@@ -211,7 +212,7 @@ module.exports.tokenTransferDeposit = (event, context) => {
           TableName: "FineractDeposits",
           Item: {
             depositId: id,
-            depositType: "ON_CHAIN_DEPOSIT",
+            depositType: DepositTypes.OnChainDeposit,
             resourceId: result.resourceId,
             from,
             to,
@@ -232,8 +233,8 @@ module.exports.tokenTransferDeposit = (event, context) => {
         value
       };
     })
-    .catch(error=>{
-        console.log(JSON.stringify(error));
-        context.fail(error);
+    .catch(error => {
+      console.log(JSON.stringify(error));
+      context.fail(error);
     });
 };
