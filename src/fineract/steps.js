@@ -202,7 +202,6 @@ module.exports.tokenTransferDeposit = (event, context) => {
       return savings.deposit(account.savingsId, {
         amount: value,
         type: process.env.PAYMENT_TYPE_ON_CHAIN_DEPOSIT,
-        externalId: id,
         date: timestamp
       });
     })
@@ -233,5 +232,8 @@ module.exports.tokenTransferDeposit = (event, context) => {
         value
       };
     })
-    .catch(context.fail);
+    .catch(error=>{
+        console.log(JSON.stringify(error));
+        context.fail(error);
+    });
 };

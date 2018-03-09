@@ -71,8 +71,7 @@ module.exports = {
             dateFormat: 'dd MMMM yyyy',
             transactionDate: moment.utc(deposit.date).format('DD MMMM YYYY'),
             transactionAmount: deposit.amount,
-            paymentTypeId: deposit.type,
-            externalId: deposit.externalId
+            paymentTypeId: deposit.type
         };
         return api.post(path, payload, params);
     },
