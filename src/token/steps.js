@@ -16,3 +16,8 @@ module.exports.transferFailed = (event, context) => {
     const transfer = new TokenTransfer(event.id);
     transfer.failed().then(context.succeed).catch(context.fail);
 }
+
+module.exports.deposit = (event, context)=>{
+    const {wallet, value} = event;
+    return context.succeed(event);
+}

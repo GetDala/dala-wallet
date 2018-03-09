@@ -281,6 +281,12 @@ functions:
       include:
         - src/token/**
         - src/common/**
+  tokenTransferDeposit:
+    handler: src/token/steps.deposit
+    package:
+      include:
+        - src/token/**
+        - src/common/**
   #fineract
   finCreateClient:
     handler: src/fineract/steps.createClient
