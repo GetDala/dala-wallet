@@ -17,6 +17,8 @@ engine.addProvider(new FilterSubprovider());
 engine.addProvider(new Web3Subprovider(new Web3.providers.HttpProvider(RPC_SERVER)));
 engine.start();
 
+const web3 = new Web3(new Web3.providers.HttpProvider(RPC_SERVER));
+
 DalaToken.setProvider(engine);
 DalaToken.at(TOKEN_ADDRESS).then(token => {
     token.Transfer().watch(createEvent);
@@ -31,9 +33,18 @@ function createEvent(error, event) {
         return;
     }
 
+    const payload = {
+        id: event.transactionHash, 
+        timestamp: new Date().toISOString(),
+        event
+    };
+    payload.from = event.args.from;
+    payload.to = event.args.to;
+    payload.value = web3.fromWei(event.args.value.toString(), 'ether');
+    console.log(payload);
     var putParams = {
         TableName: 'DalaTokenEvents',
-        Item: Object.assign({}, event, { id: event.transactionHash, timestamp: new Date().toISOString() }),
+        Item: payload,
         ConditionExpression: 'attribute_not_exists(#id)',
         ExpressionAttributeNames: {
             '#id':'id'

@@ -30,7 +30,7 @@ class DalaWallet {
         }).promise().then(result=>{
             if(result.Count == 0) throw new ItemDoesNotExistError(`Wallet with address ${address} does not exits`);
             if(result.Count > 1) throw new TooManyItemsError(`There is more than one entry for this wallet with address ${address}`);
-            return result.Item;
+            return result.Items[0];
         });
     }
 
