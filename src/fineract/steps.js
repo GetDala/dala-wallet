@@ -94,7 +94,7 @@ module.exports.createAccount = (event, context) => {
   }
 
   function createSavingsAccount(result) {
-    let fa = result.Item;
+    let fa = result;
     if (fa) return accounts.get(fa.savingsId);
     return Promise.all([getClient(username), getProduct()])
       .then(results => {
@@ -142,16 +142,8 @@ module.exports.approveAccount = (event, context) => {
     .then(context.succeed)
     .catch(context.fail);
 
-  function getSavingsAccount() {
-    const getParams = {
-      TableName: "FineractSavingsAccounts",
-      Key: { address }
-    };
-    return dynamodb.get(getParams).promise();
-  }
-
   function approve(result) {
-    let fa = result.Item;
+    let fa = result;
     if (!fa)
       return Promise.reject(
         new Error(`No entry in FineractSavingsAccounts for ${address}`)
@@ -179,7 +171,7 @@ module.exports.activateAccount = (event, context) => {
     .catch(context.fail);
 
   function activate(result) {
-    let fa = result.Item;
+    let fa = result;
     if (!fa)
       return Promise.reject(
         new Error(`No entry in FineractSavingsAccounts for ${address}`)
