@@ -38,7 +38,7 @@ module.exports.createClient = (event, context) => {
     });
 
   function createClient(result) {
-    let fc = result.Item;
+    let fc = result;
     if (fc) return clients.get(fc.clientId);
 
     return clients
@@ -98,7 +98,7 @@ module.exports.createAccount = (event, context) => {
     if (fa) return accounts.get(fa.savingsId);
     return Promise.all([getClient(username), getProduct()])
       .then(results => {
-        const clientId = results[0].Item.clientId;
+        const clientId = results[0].clientId;
         const productId = results[1];
         const payload = {
           clientId,
