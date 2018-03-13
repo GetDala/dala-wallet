@@ -3,7 +3,7 @@ UserPoolClient:
   Properties:
     ClientName: WalaAdmin
     GenerateSecret: False
-    UserPoolId: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+    UserPoolId: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
     ExplicitAuthFlows:
       - ADMIN_NO_SRP_AUTH
     ReadAttributes:
