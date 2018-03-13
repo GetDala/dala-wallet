@@ -15,7 +15,7 @@ const { MissingParameterError } = require("../common/Errors");
 
 module.exports.createClient = (event, context) => {
   const clients = api.clients();
-  const { firstName, surname, username, phoneNumber } = event;
+  const { firstName, surname, username } = event;
   if (!firstName)
     return context.fail(
       new MissingParameterError("firstName is required", "firstName")
@@ -47,7 +47,6 @@ module.exports.createClient = (event, context) => {
           officeId: 1,
           firstname: firstName,
           lastname: surname,
-          mobileNo: phoneNumber,
           externalId: username,
           active: true,
           locale: "en",

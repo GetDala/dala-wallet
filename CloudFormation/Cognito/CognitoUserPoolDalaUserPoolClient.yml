@@ -1,0 +1,44 @@
+UserPoolClient:
+  Type: AWS::Cognito::UserPoolClient
+  Properties:
+    ClientName: WalaAdmin
+    GenerateSecret: False
+    UserPoolId: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+    ExplicitAuthFlows:
+      - ADMIN_NO_SRP_AUTH
+    ReadAttributes:
+      - phone_number
+      - given_name
+      - family_name
+      - phone_number_verified
+      - gender
+      - birthdate
+      - middle_name
+      - name
+      - nickname
+      - address
+      - email
+      - email_verified
+      - preferred_username
+      - picture
+      - custom:wallet_address
+      - custom:client_id
+      - custom:account_id
+      - custom:account_address
+    WriteAttributes:
+      - phone_number
+      - given_name
+      - family_name
+      - gender
+      - birthdate
+      - middle_name
+      - name
+      - nickname
+      - address
+      - email
+      - picture
+      - preferred_username
+      - custom:wallet_address
+      - custom:client_id
+      - custom:account_id
+      - custom:account_address

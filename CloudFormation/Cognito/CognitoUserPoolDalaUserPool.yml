@@ -1,0 +1,61 @@
+UserPool:
+  Type: AWS::Cognito::UserPool
+  DeletionPolicy: Retain
+  DependsOn: DalaWalletSMSRole 
+  Properties:
+    AdminCreateUserConfig: 
+      AllowAdminCreateUserOnly: False
+      InviteMessageTemplate: 
+        EmailMessage: "Your Dala username is {username} and temporary password is {####}."
+        EmailSubject: "Your Dala temporary password"
+        SMSMessage: "Your Dala username is {username} and temporary password is {####}."
+      UnusedAccountValidityDays: 7
+    AliasAttributes:
+      - preferred_username
+    AutoVerifiedAttributes: 
+      - phone_number
+      - email
+    DeviceConfiguration: 
+      ChallengeRequiredOnNewDevice: True
+      DeviceOnlyRememberedOnUserPrompt: False
+    MfaConfiguration: OPTIONAL
+    Policies: 
+      PasswordPolicy: 
+        MinimumLength: 8 
+        RequireLowercase: False
+        RequireNumbers: False
+        RequireSymbols: False
+        RequireUppercase: False
+    UserPoolName: "Dala User Pool"
+    Schema: 
+      - 
+        AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "wallet_address"
+        Required: False
+      -
+        AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "client_id"
+        Required: False
+      -
+        AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "account_id"
+        Required: False 
+      -
+        AttributeDataType: String
+        DeveloperOnlyAttribute: False
+        Mutable: True
+        Name: "account_address"
+        Required: False 
+    SmsConfiguration:
+      ExternalId: "fcdb3d00-1220-11e8-b460-0b94ee62a26c"
+      SnsCallerArn: ${self:resources.Outputs.DalaWalletSMSRoleArn.Value}
+    SmsAuthenticationMessage: "Your Dala authentication code is {####}."
+    SmsVerificationMessage: "Your Dala verification code is {####}."
+    EmailVerificationMessage: "Your Dala verification code is {####}."
+    EmailVerificationSubject: "Dala Verification"

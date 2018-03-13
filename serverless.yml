@@ -85,7 +85,7 @@ provider:
         - cognito-idp:AdminConfirmSignUp
         - cognito-idp:AdminUpdateUserAttributes
       Resource:
-        - ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolArn.Value}
+        - ${self:resources.Outputs.CognitoUserPoolDalaUserPoolArn.Value}
     - Effect: Allow
       Action:
         - SNS:Publish
@@ -333,24 +333,24 @@ functions:
   userSetDefaultAccountAddress:
     handler: src/users/steps.setDefaultAccountAddress 
     environment:
-      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
-      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
   userSetClientId:
     handler: src/users/steps.setClientId
     environment:
-      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
-      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
   userSetDefaultAccountId:
     handler: src/users/steps.setDefaultAccountId
     environment:
-      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
-      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
   #api endpoints
   authenticate:
     handler: src/users/handler.authenticate
     environment:
-      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
-      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
     package: 
       include:
         - src/users/**
@@ -363,8 +363,8 @@ functions:
   registerUser:
     handler: src/users/handler.register
     environment:
-      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolClientId.Value}
-      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolId.Value}
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
     package:
       include:
         - src/users/**
@@ -477,7 +477,7 @@ custom:
       Name: DalaUsers
       IdentitySource: "method.request.header.Authorization"
       ProviderARNs:
-        - ${self:resources.Outputs.CognitoUserPoolDalaWalletUserPoolArn.Value}
+        - ${self:resources.Outputs.CognitoUserPoolDalaUserPoolArn.Value}
   defaultStage: dev
   profiles:
     dev:
@@ -529,17 +529,17 @@ resources:
         Fn::GetAtt:
           - DalaWalletSMSRole
           - Arn
-    CognitoUserPoolDalaWalletUserPoolId:
+    CognitoUserPoolDalaUserPoolId:
       Value:
-        Ref: CognitoUserPoolDalaWalletUserPool
-    CognitoUserPoolDalaWalletUserPoolArn:
+        Ref: CognitoUserPoolDalaUserPool
+    CognitoUserPoolDalaUserPoolArn:
       Value:
         Fn::GetAtt:
-          - CognitoUserPoolDalaWalletUserPool
+          - CognitoUserPoolDalaUserPool
           - Arn
-    CognitoUserPoolDalaWalletUserPoolClientId:
+    CognitoUserPoolDalaUserPoolClientId:
       Value: 
-        Ref: CognitoUserPoolDalaWalletUserPoolClient
+        Ref: CognitoUserPoolDalaUserPoolClient
     OnCreateOnChainWalletStateMachineArn:
       Value:
         Ref: OnCreateOnChainWalletStateMachine
@@ -570,8 +570,8 @@ resources:
     DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
     DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
     DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
-    CognitoUserPoolDalaWalletUserPool: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPool.yml):UserPool}
-    CognitoUserPoolDalaWalletUserPoolClient: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaWalletUserPoolClient.yml):UserPoolClient}
+    CognitoUserPoolDalaUserPool: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaUserPool.yml):UserPool}
+    CognitoUserPoolDalaUserPoolClient: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaUserPoolClient.yml):UserPoolClient}
     DalaOnChainWalletCreatedSNSTopic: ${file(./CloudFormation/SNS/DalaOnChainWalletCreatedSNSTopic.yml):Topic}
     DalaWalletCreatedSNSTopic: ${file(./CloudFormation/SNS/DalaWalletCreatedSNSTopic.yml):Topic}
     DalaWalletDepositSNSTopic: ${file(./CloudFormation/SNS/DalaWalletDepositSNSTopic.yml):Topic}
