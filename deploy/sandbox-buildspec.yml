@@ -1,11 +1,11 @@
 version: 0.2
-
 env:
+  variables:
+    AWS_PROFILE: sandbox
   parameter-store:
     AWS_ACCESS_KEY_ID: SERVERLESS_SANDBOX_AWS_ACCESS_KEY
     AWS_SECRET_ACCESS_KEY: SERVERLESS_SANDBOX_AWS_ACCESS_SECRET
     AWS_ACCOUNT_ID: SANDBOX_ACCOUNTID
-    AWS_PROFILE: sandbox
 phases:
   install:
     commands: 
