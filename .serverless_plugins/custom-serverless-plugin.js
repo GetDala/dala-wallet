@@ -82,68 +82,97 @@ class ServerlessPlugin {
       resourceId: method.id,
       restApiId
     }
-
-    const api = this.pluginCustom.apis[logicalResourceId];
-    if (api) {
-      if (api.enabled) {
-        //create VPC_LINK HTTP_PROXY
-        payload.type = 'HTTP_PROXY';
-        payload.connectionId = this.pluginCustom.vpcLinkId;
-        payload.connectionType = 'VPC_LINK';
-        payload.uri = `${this.pluginCustom.baseUri}${method.path}`;
-        payload.requestParameters = {};
-        const pathParameters = this.getParameters(method.path);
-        pathParameters.forEach(pp => {
-          payload.requestParameters[`integration.request.path.${pp}`] = `method.request.path.${pp}`;
-        });
-      } else {
-        //create AWS_PROXY
-        const lambdaFunction = `${api.functionArn}`;
-        const region = this.provider.getRegion();
-        payload.type = 'AWS_PROXY';
-        payload.uri = `arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambdaFunction}/invocations`
-      }
-      return this.provider.request(
-        'APIGateway',
-        'getMethod',
-        {
-          restApiId,
-          httpMethod: payload.httpMethod,
-          resourceId: payload.resourceId
-        },
-        this.provider.getStage(),
-        this.provider.getRegion()
-      ).then(apiMethod => {
-        const { methodIntegration } = apiMethod;
-        if (methodIntegration) {
-          const { uri, connectionType, requestParameters } = methodIntegration;
-          if (uri == payload.uri && connectionType == payload.connectionType && this.objectEquals(requestParameters, payload.requestParameters)) {
-            this.serverless.cli.log(`custom: Integration for ${method.path} has already been created`);
-            return;
-          } else {
-            this.serverless.cli.log(`custom: Integration for ${method.path} is being created`);
-          }
+    return this.getValueFromCf(this.pluginCustom.baseUri).then(baseUri => {
+      const api = this.pluginCustom.apis[logicalResourceId];
+      if (api) {
+        if (api.enabled) {
+          //create VPC_LINK HTTP_PROXY
+          payload.type = 'HTTP_PROXY';
+          payload.connectionId = this.pluginCustom.vpcLinkId;
+          payload.connectionType = 'VPC_LINK';
+          payload.uri = `${baseUri}${method.path}`;
+          payload.requestParameters = {};
+          const pathParameters = this.getParameters(method.path);
+          pathParameters.forEach(pp => {
+            payload.requestParameters[`integration.request.path.${pp}`] = `method.request.path.${pp}`;
+          });
+        } else {
+          //create AWS_PROXY
+          const lambdaFunction = `${api.functionArn}`;
+          const region = this.provider.getRegion();
+          payload.type = 'AWS_PROXY';
+          payload.uri = `arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambdaFunction}/invocations`
         }
         return this.provider.request(
           'APIGateway',
-          'putIntegration',
-          payload,
+          'getMethod',
+          {
+            restApiId,
+            httpMethod: payload.httpMethod,
+            resourceId: payload.resourceId
+          },
           this.provider.getStage(),
           this.provider.getRegion()
-        );
-      });
+        ).then(apiMethod => {
+          const { methodIntegration } = apiMethod;
+          if (methodIntegration) {
+            const { uri, connectionType, requestParameters } = methodIntegration;
+            if (uri == payload.uri && connectionType == payload.connectionType && this.objectEquals(requestParameters, payload.requestParameters)) {
+              this.serverless.cli.log(`custom: Integration for ${method.path} has already been created`);
+              return;
+            } else {
+              this.serverless.cli.log(`custom: Integration for ${method.path} is being created`);
+            }
+          }
+          return this.provider.request(
+            'APIGateway',
+            'putIntegration',
+            payload,
+            this.provider.getStage(),
+            this.provider.getRegion()
+          );
+        });
+      }
+    })
+  }
+
+  getValueFromCf(variableString) {
+    if (!this.pluginCustom.baseUri.startsWith('http://')) {
+      const variableStringWithoutSource = variableString.split('.');
+      const stackName = variableStringWithoutSource[0];
+      const outputLogicalId = variableStringWithoutSource[1];
+      return this.serverless.getProvider('aws')
+        .request('CloudFormation',
+          'describeStacks',
+          { StackName: stackName },
+          { useCache: true })
+        .then((result) => {
+          const outputs = result.Stacks[0].Outputs;
+          const output = outputs.find(x => x.OutputKey === outputLogicalId);
+
+          if (output === undefined) {
+            const errorMessage = [
+              'Trying to request a non exported variable from CloudFormation.',
+              ` Stack name: "${stackName}"`,
+              ` Requested variable: "${outputLogicalId}".`,
+            ].join('');
+            return Promise.reject(new this.serverless.classes.Error(errorMessage));
+          }
+          return Promise.resolve(output.OutputValue);
+        });
     }
+    return Promise.resolve(variableString);
   }
 
   objectEquals(obj1, obj2) {
-    if(obj1 && !obj2) return false;
-    if(!obj1 && obj2) return false;
+    if (obj1 && !obj2) return false;
+    if (!obj1 && obj2) return false;
     var result = true;
     if (obj1 && obj2) {
       for (var prop in obj1) {
         var val1 = obj1[prop];
         var val2 = obj2[prop];
-        if(val1 != val2){
+        if (val1 != val2) {
           result = false;
         }
       }

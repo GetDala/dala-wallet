@@ -483,7 +483,7 @@ custom:
     dev:
       #these items will be replaced with items imported from the infrastructure stack
       #baseUri: http://microraiden-paywall-nlb-cb4b8f91511401bf.elb.eu-west-1.amazonaws.com
-      baseUri: ${cf:dala-microraiden-stack.MircoRaidenNLBHostName}
+      baseUri: dala-microraiden-stack.MircoRaidenNLBHostName
       #vpcLinkId: hzdy3o
       vpcLinkId: 2ovpes 
       DEFAULT_GAS: 4500000
