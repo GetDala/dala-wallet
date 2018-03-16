@@ -107,7 +107,7 @@ class DalaWallet {
             },
             ExpressionAttributeValues: {
                 ':currentStatus': Statuses.Processing,
-                ':status': Statuses.Created,
+                ':status': Statuses.Failed,
                 ':lastUpdated': new Date().toISOString()
             }
         };
