@@ -109,6 +109,7 @@ module.exports.onWebhook = (event, context) => {
       .then(([client, savings, transaction]) => {
         return {
           eventType: getEventType(`${entity}:${action}`),
+          transactionId: transaction.id,
           address: savings.externalId,
           username: client.externalId,
           balance: savings.summary.accountBalance,
