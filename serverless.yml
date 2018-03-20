@@ -72,6 +72,7 @@ provider:
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractDeposits
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractTransfers
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWithdrawals
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWebhookEvents
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/TokenTransfers
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWallets/index/idx_dalaWallets_address_timestamp
         - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractSavingsAccounts/index/idx_fineractSavingsAccounts_username
@@ -330,6 +331,18 @@ functions:
           path: v1/fineract-webhooks
           method: post
           cors: true
+  onFineractWebhookEvent:
+    handler: src/fineract/listners.onFineractWebhookEvent
+    package:
+      include: 
+        - src/fineract/**
+    events:
+      - stream:
+        type: dynamodb
+        arn:
+          Fn::GetAtt:
+            - FineractWebhookEventsDynamoDbTable
+            - StreamArn
   userSetDefaultAccountAddress:
     handler: src/users/steps.setDefaultAccountAddress 
     environment:
@@ -564,6 +577,7 @@ resources:
     FineractTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractTransfersDynamoDbTable.yml):Table}
     FineractWithdrawalsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractWithdrawalsDynamoDbTable.yml):Table}
     FineractDepositsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractDepositsDynamoDbTable.yml):Table}
+    FineractWebhookEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractWebhookEventsDynamoDbTable.yml):Table}
     DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
     DalaWalletEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletEventsDynamoDbTable.yml):Table}
     DalaWalletsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletsDynamoDbTable.yml):Table}

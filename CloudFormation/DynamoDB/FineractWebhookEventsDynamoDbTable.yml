@@ -1,0 +1,24 @@
+Table:
+  Type: 'AWS::DynamoDB::Table'
+  DeletionPolicy: Retain
+  Properties:
+    AttributeDefinitions:
+      -
+        AttributeName: entityId
+        AttributeType: S
+      -
+        AttributeName: timestamp
+        AttributeType: S
+    KeySchema:
+        -
+          AttributeName: entityId
+          KeyType: HASH
+        -
+          AttributeName: timestamp
+          KeyType: RANGE
+    ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    TableName: 'FineractWebhookEvents'
+    StreamSpecification:
+      StreamViewType: 'NEW_AND_OLD_IMAGES'
