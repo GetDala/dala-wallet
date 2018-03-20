@@ -34,25 +34,25 @@ StateMachine:
           "On Wallet Created":{
             "Type":"Task",
             "ResultPath":"$.notificationResult",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-notifications-api-${self:provider.stage}-onSuccessfulCreateWallet",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-notifications-api-${self:provider.stage}-onSuccessfulCreateWallet",
             "End":true
           },
           "On Internal Transfer":{
             "Type":"Task",
             "ResultPath":"$.notificationResult",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-notifications-api-${self:provider.stage}-onSuccessfulTransfer",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-notifications-api-${self:provider.stage}-onSuccessfulTransfer",
             "End":true
           },
           "On Deposit":{
             "Type":"Task",
             "ResultPath":"$.notificationResult",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-notifications-api-${self:provider.stage}-onSuccessfulDeposit",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-notifications-api-${self:provider.stage}-onSuccessfulDeposit",
             "End":true
           },
           "On Withdrawal":{
             "Type":"Task",
             "ResultPath":"$.notificationResult",
-            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-notifications-api-${self:provider.stage}-onSuccessfulWithdrawal",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-notifications-api-${self:provider.stage}-onSuccessfulWithdrawal",
             "End":true
           },
           "End":{

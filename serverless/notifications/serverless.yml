@@ -1,4 +1,4 @@
-service: dala-wallet-notifications-api
+service: dala-notifications-api
 package: 
   exclude:
     - env/**
