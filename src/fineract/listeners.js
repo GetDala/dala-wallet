@@ -105,7 +105,7 @@ const onWebhook = event => {
         savings.get(body.savingsId),
         isTransaction
           ? savings.getTransaction(body.savingsId, body.resourceId)
-          : Promise.resolve({})
+          : Promise.resolve(null)
       ])
         .then(([client, savings, transaction]) => {
           return {
