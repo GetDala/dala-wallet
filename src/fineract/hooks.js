@@ -13,7 +13,7 @@ module.exports.onWebhook = (event, context) => {
   const putParams = {
     TableName: 'FineractWebhookEvents',
     Item: {
-      entityId: body.clientId || uuid.v1(),
+      entityId: `${body.clientId}` || uuid.v1(),
       timestamp: new Date().toISOString(),
       payload: {
         body,
