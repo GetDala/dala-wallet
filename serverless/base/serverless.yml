@@ -251,11 +251,11 @@ functions:
         - src/fineract/**
     events:
       - stream:
-        type: dynamodb
-        arn:
-          Fn::GetAtt:
-            - FineractWebhookEventsDynamoDbTable
-            - StreamArn
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - FineractWebhookEventsDynamoDbTable
+              - StreamArn
   userSetDefaultAccountAddress:
     handler: src/users/steps.setDefaultAccountAddress 
     environment:
