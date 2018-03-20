@@ -245,7 +245,7 @@ functions:
           method: post
           cors: true
   onFineractWebhookEvent:
-    handler: src/fineract/listners.onFineractWebhookEvent
+    handler: src/fineract/listeners.onFineractWebhookEvent
     package:
       include: 
         - src/fineract/**
