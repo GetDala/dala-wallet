@@ -22,11 +22,11 @@ provider:
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
       - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
   environment:
-    DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
-    ON_CHAIN_WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaOnChainWalletCreatedSNSTopicArn.Value}
-    WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
-    TRANSFER_TOPIC: ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
-    WITHDRAWAL_TOPIC: ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
+    DEPOSIT_TOPIC: ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletDepositSNSTopicArn}
+    ON_CHAIN_WALLET_CREATED_TOPIC: ${cf:dala-wallet-api-${self:provider.stage}.DalaOnChainWalletCreatedSNSTopicArn}
+    WALLET_CREATED_TOPIC: ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletCreatedSNSTopicArn}
+    TRANSFER_TOPIC: ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletTransferSNSTopicArn}
+    WITHDRAWAL_TOPIC: ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletWithdrawalSNSTopicArn}
   iamRoleStatements:
     - Effect: Allow
       Action:
