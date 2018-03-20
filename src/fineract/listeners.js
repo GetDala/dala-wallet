@@ -48,16 +48,16 @@ const onWebhook = event => {
       case Entities.SavingsAccount:
         switch (action) {
           case "ACTIVATE":
-            return handleSavingsAccountWebhook(false);
+            return resolve(handleSavingsAccountWebhook(false));
           case "DEPOSIT":
-            return handleSavingsAccountWebhook(true);
+            return resolve(handleSavingsAccountWebhook(true));
           case "WITHDRAWAL":
-            return handleSavingsAccountWebhook(true);
+            return resolve(handleSavingsAccountWebhook(true));
           default:
             return resolve({})
         }
       case Entities.AccountTransfer:
-        return handleAccountTransferWebhook();
+        return resolve(handleAccountTransferWebhook());
       default:
         console.log("Unhandled Webhook Event");
         return resolve({});
