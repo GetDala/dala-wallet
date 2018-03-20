@@ -104,17 +104,17 @@ module.exports.onWebhook = (event, context) => {
       savings.get(body.savingsId),
       isTransaction
         ? savings.getTransaction(body.savingsId, body.resourceId)
-        : Promise.resolve(null)
+        : Promise.resolve({})
     ])
       .then(([client, savings, transaction]) => {
         return {
           eventType: getEventType(`${entity}:${action}`),
-          transactionId: transaction.id,
+          transactionId: transaction && transaction.id,
           address: savings.externalId,
           username: client.externalId,
           balance: savings.summary.accountBalance,
-          amount: transaction.amount,
-          date: {
+          amount: transaction && transaction.amount,
+          date: transaction && {
             year: transaction.date[0],
             month: transaction.date[1],
             day: transaction.date[2]
