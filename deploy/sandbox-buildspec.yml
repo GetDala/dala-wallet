@@ -19,6 +19,9 @@ phases:
   build:
     commands:
       - yarn
+      - cp -f serverless/base/serverless.yml .
+      - serverless deploy --stage dev --profile sandbox
+      - cp -f serverless/notifications/serverless.yml .
       - serverless deploy --stage dev --profile sandbox
   post_build:
     commands:

@@ -28,11 +28,6 @@ provider:
     DESTINATION_ADDRESS: ${self:custom.profiles.${self:provider.stage}.DESTINATION_ADDRESS}
     FINERACT_TENANT_IDENTIFIER: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_TENANT_IDENTIFIER}
     FINERACT_API_ENDPOINT_BASE: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_API_ENDPOINT_BASE}
-    DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
-    ON_CHAIN_WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaOnChainWalletCreatedSNSTopicArn.Value}
-    WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
-    TRANSFER_TOPIC: ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
-    WITHDRAWAL_TOPIC: ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
     DEFAULT_GAS: ${self:custom.profiles.${self:provider.stage}.DEFAULT_GAS}
     ON_TOKEN_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
     ON_CREATE_ON_CHAIN_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateOnChainWalletStateMachineArn.Value}
@@ -87,17 +82,6 @@ provider:
         - cognito-idp:AdminUpdateUserAttributes
       Resource:
         - ${self:resources.Outputs.CognitoUserPoolDalaUserPoolArn.Value}
-    - Effect: Allow
-      Action:
-        - SNS:Publish
-        - SNS:Subscribe
-        - SNS:ConfirmSubscription
-      Resource:
-        - ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
-        - ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
-        - ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
-        - ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
-        - ${self:resources.Outputs.DalaOnChainWalletCreatedSNSTopicArn.Value}
   apiKeys:
     - ${self:service}-${self:provider.stage}
 
@@ -127,77 +111,6 @@ functions:
             Fn::GetAtt:
               - DalaWalletEventsDynamoDbTable
               - StreamArn
-  #notification steps
-  onSuccessfulCreateOnChainWallet:
-    handler: src/notifications/steps.onSuccessfulCreateOnChainWallet
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onFailedCreateOnChainWallet:
-    handler: src/notifications/steps.onFailedCreateOnChainWallet
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onSuccessfulCreateWallet:
-    handler: src/notifications/steps.onSuccessfulCreateWallet
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onFailedCreateWallet:
-    handler: src/notifications/steps.onFailedCreateWallet
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onSuccessfulTransfer:
-    handler: src/notifications/steps.onSuccessfulTransfer
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onFailedTransfer:
-    handler: src/notifications/steps.onFailedTransfer
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onSuccessfulDeposit:
-    handler: src/notifications/steps.onSuccessfulDeposit
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onFailedDeposit:
-    handler: src/notifications/steps.onFailedDeposit
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onSuccessfulWithdrawal:
-    handler: src/notifications/steps.onSuccessfulWithdrawal
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
-  onFailedWithdrawal:
-    handler: src/notifications/steps.onFailedWithdrawal
-    package:
-      include:
-        - src/notifications/**
-        - src/common/**
-        - src/model/**
   #state machine steps
   ethGetTransactionReceipt:
     handler: src/blockchain/ethereum-steps.getTransactionReceipt
@@ -603,30 +516,6 @@ resources:
       Type: AWS::Lambda::Function
       DependsOn: OnDalaWalletEventLambdaFunction
     OnDalaWalletEventLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnSuccessfulCreateWalletLambdaFunction
-    OnSuccessfulCreateWalletLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnFailedCreateWalletLambdaFunction
-    OnFailedCreateWalletLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnSuccessfulTransferLambdaFunction
-    OnSuccessfulTransferLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnFailedTransferLambdaFunction
-    OnFailedTransferLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnSuccessfulDepositLambdaFunction
-    OnSuccessfulDepositLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnFailedDepositLambdaFunction
-    OnFailedDepositLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnSuccessfulWithdrawalLambdaFunction
-    OnSuccessfulWithdrawalLambdaFunction:
-      Type: AWS::Lambda::Function
-      DependsOn: OnFailedWithdrawalLambdaFunction
-    OnFailedWithdrawalLambdaFunction:
       Type: AWS::Lambda::Function
       DependsOn: EthGetTransactionReceiptLambdaFunction
     EthGetTransactionReceiptLambdaFunction:

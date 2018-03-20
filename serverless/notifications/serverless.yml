@@ -1,0 +1,132 @@
+service: dala-wallet-notifications-api
+package: 
+  exclude:
+    - env/**
+    - microraiden/**
+    - dala_proxy.db*
+    - private-key
+    - secret.js
+    - truffle.js
+
+provider:
+  name: aws
+  stage: ${opt:stage, self:custom.defaultStage}
+  profile: ${opt:profile}
+  region: eu-west-1
+  runtime: nodejs6.10
+  vpc:
+    securityGroupIds: 
+      - Fn::ImportValue: dala-infrastructure-DalaInstanceSecurityGroupId
+    subnetIds:
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetAId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
+  environment:
+    DEPOSIT_TOPIC: ${self:resources.Outputs.DalaWalletDepositSNSTopicArn.Value}
+    ON_CHAIN_WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaOnChainWalletCreatedSNSTopicArn.Value}
+    WALLET_CREATED_TOPIC: ${self:resources.Outputs.DalaWalletCreatedSNSTopicArn.Value}
+    TRANSFER_TOPIC: ${self:resources.Outputs.DalaWalletTransferSNSTopicArn.Value}
+    WITHDRAWAL_TOPIC: ${self:resources.Outputs.DalaWalletWithdrawalSNSTopicArn.Value}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+        - SNS:Subscribe
+        - SNS:ConfirmSubscription
+      Resource:
+        - ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletDepositSNSTopicArn}
+        - ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletCreatedSNSTopicArn}
+        - ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletTransferSNSTopicArn}
+        - ${cf:dala-wallet-api-${self:provider.stage}.DalaWalletWithdrawalSNSTopicArn}
+        - ${cf:dala-wallet-api-${self:provider.stage}.DalaOnChainWalletCreatedSNSTopicArn}
+
+functions:
+  #notification steps
+  onSuccessfulCreateOnChainWallet:
+    handler: src/notifications/steps.onSuccessfulCreateOnChainWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedCreateOnChainWallet:
+    handler: src/notifications/steps.onFailedCreateOnChainWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onSuccessfulCreateWallet:
+    handler: src/notifications/steps.onSuccessfulCreateWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedCreateWallet:
+    handler: src/notifications/steps.onFailedCreateWallet
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onSuccessfulTransfer:
+    handler: src/notifications/steps.onSuccessfulTransfer
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedTransfer:
+    handler: src/notifications/steps.onFailedTransfer
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onSuccessfulDeposit:
+    handler: src/notifications/steps.onSuccessfulDeposit
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedDeposit:
+    handler: src/notifications/steps.onFailedDeposit
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onSuccessfulWithdrawal:
+    handler: src/notifications/steps.onSuccessfulWithdrawal
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+  onFailedWithdrawal:
+    handler: src/notifications/steps.onFailedWithdrawal
+    package:
+      include:
+        - src/notifications/**
+        - src/common/**
+        - src/model/**
+plugins:
+  - serverless-secrets
+  - serverless-prune-plugin
+  - serverless-plugin-cfauthorizer
+  - serverless-scriptable-plugin
+  - custom-serverless-plugin
+  - serverless-aws-documentation
+
+custom:
+  prune:
+    automatic: true
+    number: 5
+  defaultStage: dev
+  profiles:
+    dev:
+  scriptHooks:
+    after:deploy:compileEvents: 
+      - scripts/trimAwsLogPermissions.js
