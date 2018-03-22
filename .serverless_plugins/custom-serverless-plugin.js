@@ -184,8 +184,12 @@ class ServerlessPlugin {
     this.pluginCustom = this.loadCustom(this.serverless.service.custom);
     let restApiId;
     return this.getStackResources().then(resources => {
-      restApiId = resources.StackResourceSummaries.find(x => x.LogicalResourceId === 'ApiGatewayRestApi').PhysicalResourceId;
-      return this.getApiResources(restApiId);
+      let resource = resources.StackResourceSummaries.find(x => x.LogicalResourceId === 'ApiGatewayRestApi');
+      if(resource){
+        restApiId = resources.StackResourceSummaries.find(x => x.LogicalResourceId === 'ApiGatewayRestApi').PhysicalResourceId;
+        return this.getApiResources(restApiId);
+      }
+      return [];
     }).then(apis => {
       const methods = apis.items.filter(api => !!api.resourceMethods);
       const allMethods = [];
