@@ -364,21 +364,21 @@ functions:
             parameters:
               paths:
                 sender: true
-                block: true
+                block: false
           cors: true
           private: true
-  microraidenChannelProxy:
-    handler: nofunction.ignore
-    events:
-      - http:
-          path: api/1/channels/{sender}
-          method: get
-          request:
-            parameters:
-              paths:
-                sender: true
-          cors: true
-          private: true
+  # microraidenChannelProxy:
+  #   handler: nofunction.ignore
+  #   events:
+  #     - http:
+  #         path: api/1/channels/{sender}
+  #         method: get
+  #         request:
+  #           parameters:
+  #             paths:
+  #               sender: true
+  #         cors: true
+  #         private: true
         
   
 
