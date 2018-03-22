@@ -364,7 +364,7 @@ functions:
             parameters:
               paths:
                 sender: true
-                block: true
+                block: false
           cors: true
           private: true
 
