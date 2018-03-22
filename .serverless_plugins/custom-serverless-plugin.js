@@ -17,14 +17,13 @@ class ServerlessPlugin {
   }
 
   loadCustom(custom) {
-    let pluginCustom = {};
     if (custom && custom.vpcLinks) {
-      pluginCustom = custom.vpcLinks;
+      return custom.vpcLinks;
       // pluginCustom.baseUri = custom.vpcLinks.baseUri;
       // pluginCustom.vpcLinkId = custom.vpcLinks.vpcLinkId;
     }
 
-    return pluginCustom;
+    return null;
   }
 
   getStackResources() {
@@ -182,6 +181,7 @@ class ServerlessPlugin {
 
   addVpcLinksToApiEndpoints() {
     this.pluginCustom = this.loadCustom(this.serverless.service.custom);
+    if(!this.pluginCustom) return;
     let restApiId;
     return this.getStackResources().then(resources => {
       let resource = resources.StackResourceSummaries.find(x => x.LogicalResourceId === 'ApiGatewayRestApi');
