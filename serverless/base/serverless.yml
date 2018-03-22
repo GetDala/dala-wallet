@@ -355,7 +355,10 @@ functions:
           cfAuthorizer: DalaWalletAuthorizer
   #microraiden proxies
   microraidenChannelBlockProxy:
-    handler: nofunction.ignore
+    handler: src/lib/nofunction.ignore
+    package:
+      include:
+        - src/lib/nofunction.js
     events:
       - http:
           path: api/1/channels/{sender}/{block}
@@ -368,7 +371,10 @@ functions:
           cors: true
           private: true
   microraidenChannelProxy:
-    handler: nofunction.ignore
+    handler: src/lib/nofunction.ignore
+    package:
+      include:
+        - src/lib/nofunction.js
     events:
       - http:
           path: api/1/channels/{sender}
