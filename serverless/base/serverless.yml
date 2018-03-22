@@ -364,21 +364,21 @@ functions:
             parameters:
               paths:
                 sender: true
-                block: false
+                block: true
           cors: true
           private: true
-  # microraidenChannelProxy:
-  #   handler: nofunction.ignore
-  #   events:
-  #     - http:
-  #         path: api/1/channels/{sender}
-  #         method: get
-  #         request:
-  #           parameters:
-  #             paths:
-  #               sender: true
-  #         cors: true
-  #         private: true
+  microraidenChannelProxy:
+    handler: nofunction.ignore
+    events:
+      - http:
+          path: api/1/channels/{sender}
+          method: get
+          request:
+            parameters:
+              paths:
+                sender: true
+          cors: true
+          private: true
         
   
 
@@ -395,6 +395,8 @@ custom:
     baseUri: ${self:custom.profiles.${self:provider.stage}.baseUri}
     vpcLinkId: ${self:custom.profiles.${self:provider.stage}.vpcLinkId}
     apis:
+      ApiGatewayMethodApi1ChannelsSenderVarGet:
+        enabled: true
       ApiGatewayMethodApi1ChannelsSenderVarBlockVarGet:
         enabled: true
       ApiGatewayMethodV1WalletsPost: 
