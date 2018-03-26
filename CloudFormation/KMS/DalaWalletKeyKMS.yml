@@ -1,5 +1,6 @@
 Key:
   Type: AWS::KMS::Key
+  DependsOn: IamRoleLambdaExecution
   Properties:
     Description: "KMS key for encryption of blockchain resources such as private key"
     Enabled: true
