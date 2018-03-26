@@ -457,7 +457,7 @@ custom:
     after:deploy:compileEvents: 
       - scripts/trimAwsLogPermissions.js
   domain: 
-    url: ${self:custom.profiles.${self:provider.stage}.API_GATEWAY_DOMAIN}
+    name: ${self:custom.profiles.${self:provider.stage}.API_GATEWAY_DOMAIN}
     basePath: v1
 
 resources:
