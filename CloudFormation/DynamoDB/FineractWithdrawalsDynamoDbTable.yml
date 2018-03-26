@@ -1,6 +1,7 @@
 Table:
   Type: 'AWS::DynamoDB::Table'
   DeletionPolicy: Retain
+  DependsOn: FineractWebhookEventsDynamoDbTable
   Properties:
     AttributeDefinitions:
       -
