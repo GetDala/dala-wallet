@@ -20,9 +20,9 @@ phases:
     commands:
       - yarn
       - cp -f serverless/base/serverless.yml .
-      - serverless deploy --stage dev --profile ropsten
+      - serverless deploy --stage ropsten --profile ropsten
       - cp -f serverless/notifications/serverless.yml .
-      - serverless deploy --stage dev --profile ropsten
+      - serverless deploy --stage ropsten --profile ropsten
   post_build:
     commands:
 artifacts:
