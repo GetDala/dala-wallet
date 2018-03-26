@@ -395,6 +395,7 @@ plugins:
   - serverless-scriptable-plugin
   - custom-serverless-plugin
   - serverless-aws-documentation
+  - serverless-plugin-custom-domain
 
 custom:
   vpcLinks:
@@ -446,6 +447,7 @@ custom:
       MIN_BALANCE: 0
       DALA_ACCOUNT_PRODUCT: 1
       PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
+      API_GATEWAY_DOMAIN: ropsten.dala.org
   serverlessSecrets:
     providerOptions:
       region: ${self:provider.region}
@@ -454,6 +456,9 @@ custom:
   scriptHooks:
     after:deploy:compileEvents: 
       - scripts/trimAwsLogPermissions.js
+  domain: 
+    url: ${self:custom.profiles.${self:provider.stage}.API_GATEWAY_DOMAIN}
+    basePath: v1
 
 resources:
   Outputs:
