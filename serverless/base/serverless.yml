@@ -440,7 +440,7 @@ custom:
       PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
     ropsten:
       baseUri: dala-microraiden-stack.MircoRaidenNLBHostName
-      vpcLinkId: 2ovpes 
+      vpcLinkId: k37w79 
       DEFAULT_GAS: 4500000
       DESTINATION_ADDRESS: "0xC53246cc72a8b37FBaCCA32E1AB28C72F24bDc6B"
       TOKEN_ADDRESS: "0x5d689a3de1a648f85d23231a2d95fa89ce3d41fc"
