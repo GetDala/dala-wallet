@@ -430,7 +430,7 @@ custom:
   defaultStage: dev
   profiles:
     dev:
-      baseUri: dala-microraiden-stack.MircoRaidenNLBHostName
+      baseUri: dala-microraiden-stack.MicroRaidenNLBHostName
       vpcLinkId: 2ovpes 
       DEFAULT_GAS: 4500000
       DESTINATION_ADDRESS: "0xDD86986bA67b4A1A8E7BE4833Dde2c09243333D7"
@@ -439,7 +439,7 @@ custom:
       DALA_ACCOUNT_PRODUCT: 1
       PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
     ropsten:
-      baseUri: dala-microraiden-stack.MircoRaidenNLBHostName
+      baseUri: dala-microraiden-stack.MicroRaidenNLBHostName
       vpcLinkId: k37w79 
       DEFAULT_GAS: 4500000
       DESTINATION_ADDRESS: "0xC53246cc72a8b37FBaCCA32E1AB28C72F24bDc6B"
