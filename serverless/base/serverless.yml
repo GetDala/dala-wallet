@@ -458,7 +458,7 @@ custom:
       - scripts/trimAwsLogPermissions.js
   domain: 
     name: ${self:custom.profiles.${self:provider.stage}.API_GATEWAY_DOMAIN}
-    basePath: v1
+    basePath: api
 
 resources:
   Outputs:
