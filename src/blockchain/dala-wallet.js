@@ -8,7 +8,7 @@ const contract = require('../../lib/DalaWallet.json');
 
 module.exports.create = (event, context) => {
     return secretsPromise.then(() => {
-        const { RPC_SERVER, PRIVATE_KEY, FROM_ADDRESS, DEFAULT_GAS, DESTINATION_ADDRESS, TOKEN_ADDRESS, MIN_BALANCE } = process.env;
+        const { RPC_SERVER, PRIVATE_KEY, FROM_ADDRESS, DEFAULT_GAS, DESTINATION_ADDRESS, TOKEN_ADDRESS } = process.env;
         const engine = utils.createEngine(RPC_SERVER, PRIVATE_KEY, `0x${FROM_ADDRESS}`);
         const web3 = new Web3(engine);
         const wallet = web3.eth.contract(contract.abi);
@@ -18,12 +18,11 @@ module.exports.create = (event, context) => {
             gas: DEFAULT_GAS,
             destination: DESTINATION_ADDRESS,
             token: TOKEN_ADDRESS,
-            minBalance: MIN_BALANCE,
             data: contract.bytecode
         };
-    }).then(({ wallet, from, gas, destination, token, minBalance, data }) => {
+    }).then(({ wallet, from, gas, destination, token, data }) => {
         return new Promise((resolve, reject) => {
-            return wallet.new(destination, token, minBalance, { from, gas, data }, (error, contract) => {
+            return wallet.new(destination, token, { from, gas, data }, (error, contract) => {
                 if (error) return reject(error);
                 return resolve({
                     address: contract.address,

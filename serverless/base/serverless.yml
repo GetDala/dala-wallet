@@ -408,14 +408,18 @@ custom:
         enabled: true
       ApiGatewayMethodV1WalletsPost: 
         enabled: true
+      ApiGatewayMethodV1InternalDashtransfersPost:
+        enabled: true
+      ApiGatewayMethodV1ExternalDashtransfersPost:
+        enabled: true
       ApiGatewayMethodV1SubscribersPost: 
-        enabled: false
+        enabled: true
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-subscribe
       ApiGatewayMethodV1AuthenticationsPost: 
-        enabled: false
+        enabled: true
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-authenticate
       ApiGatewayMethodV1UsersPost: 
-        enabled: false
+        enabled: true
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-registerUser
   prune:
     automatic: true
