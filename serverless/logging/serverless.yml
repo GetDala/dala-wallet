@@ -35,6 +35,10 @@ custom:
             AWS_PROFILE: sandbox
             SLACK: https://hooks.slack.com
             SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
+        ropsten: 
+            AWS_PROFILE: sandbox
+            SLACK: https://hooks.slack.com
+            SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
         prod: 
             AWS_PROFILE: production
             SLACK: https://hooks.slack.com
@@ -55,9 +59,9 @@ resources:
             DependsOn: NotifySlackLambdaFunction
             Properties:
                 Action: lambda:InvokeFunction
-                SourceArn: arn:aws:logs:${self:provider.region}:${self:custom.profiles.${self:provider.stage}.AWS_ACCOUNT_NUMBER}:*
+                SourceArn: arn:aws:logs:${self:provider.region}:${env:AWS_ACCOUNT_ID}:*
                 Principal: logs.${self:provider.region}.amazonaws.com
-                FunctionName:  arn:aws:lambda:${self:provider.region}:${self:custom.profiles.${self:provider.stage}.AWS_ACCOUNT_NUMBER}:function:wala-logging-api-${self:provider.stage}-notifySlack
+                FunctionName:  arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:wala-logging-api-${self:provider.stage}-notifySlack
 
                
 
