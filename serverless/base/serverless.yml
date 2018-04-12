@@ -461,7 +461,7 @@ custom:
       MIN_BALANCE: 0
       DALA_ACCOUNT_PRODUCT: 1
       PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
-      API_GATEWAY_DOMAIN: ropsten.dala.org
+      API_GATEWAY_DOMAIN: mainnet.dala.org
   serverlessSecrets:
     providerOptions:
       region: ${self:provider.region}
