@@ -7,6 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "@raiden_network/microraiden": "^0.2.0",
+    "async": "^2.6.0",
     "aws-sdk": "^2.201.0",
     "big.js": "^5.0.3",
     "bunyan": "^1.8.12",
@@ -14,9 +15,9 @@
     "ethereumjs-util": "^5.1.4",
     "ethereumjs-wallet": "^0.6.0",
     "lodash": "^4.17.5",
-    "moment": "^2.20.1",
+    "moment": "^2.22.0",
     "node-localstorage": "^1.3.0",
-    "request": "^2.83.0",
+    "request": "^2.85.0",
     "serverless-plugin-custom-domain": "^2.0.0",
     "serverless-scriptable-plugin": "^0.7.0",
     "serverless-secrets": "^3.0.0-beta.12",
@@ -26,7 +27,8 @@
     "web3": "0.18.4",
     "web3-eth-accounts": "^1.0.0-beta.30",
     "web3-provider-engine": "^13.6.0",
-    "zeppelin-solidity": "^1.5.0"
+    "zeppelin-solidity": "^1.5.0",
+    "zlib": "^1.0.5"
   },
   "devDependencies": {
     "serverless": "^1.26.0",

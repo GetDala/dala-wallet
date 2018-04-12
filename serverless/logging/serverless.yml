@@ -1,0 +1,63 @@
+service: dala-logging-api
+package:
+    include:
+        - src/**
+
+provider:
+    name: aws
+    region: eu-west-1
+    runtime: nodejs6.10
+    stage: ${opt:stage, self:custom.defaultStage}
+    profile: ${opt:profile}
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+            - 'logs:CreateLogGroup'
+            - 'logs:CreateLogStream'
+            - 'logs:PutLogEvents'
+          Resource:
+             - 'arn:aws:logs:*:*:*'  
+    environment:
+        SLACK: ${self:custom.profiles.${self:provider.stage}.SLACK}
+        SLACK_WEBHOOK: ${self:custom.profiles.${self:provider.stage}.SLACK_WEBHOOK}
+
+functions:
+    notifySlack:
+        handler: src/slack/notify.notify
+
+plugins:
+    - serverless-prune-plugin
+              
+custom:
+    defaultStage: dev
+    profiles:
+        dev: 
+            AWS_PROFILE: sandbox
+            SLACK: https://hooks.slack.com
+            SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
+        prod: 
+            AWS_PROFILE: production
+            SLACK: https://hooks.slack.com
+    prune:
+        automatic: true
+        number: 5
+
+resources:
+    Outputs:
+        SendAlertsToSlack:
+            Value:
+                Fn::GetAtt:
+                    - NotifySlackLambdaFunction
+                    - Arn
+    Resources:
+        CloudWatchInvokePolicy:
+            Type: AWS::Lambda::Permission
+            DependsOn: NotifySlackLambdaFunction
+            Properties:
+                Action: lambda:InvokeFunction
+                SourceArn: arn:aws:logs:${self:provider.region}:${self:custom.profiles.${self:provider.stage}.AWS_ACCOUNT_NUMBER}:*
+                Principal: logs.${self:provider.region}.amazonaws.com
+                FunctionName:  arn:aws:lambda:${self:provider.region}:${self:custom.profiles.${self:provider.stage}.AWS_ACCOUNT_NUMBER}:function:wala-logging-api-${self:provider.stage}-notifySlack
+
+               
+
