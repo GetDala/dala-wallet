@@ -40,6 +40,8 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 
+log.info({}, `dala-token-listener is up and running on instance ${process.env.INSTANCE_ID}`);
+
 DalaToken.setProvider(engine);
 DalaToken.at(TOKEN_ADDRESS).then(token => {
     token.Transfer().watch(createEvent);
