@@ -22,7 +22,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(RPC_SERVER));
 
 var loggerDefinition = {
     name: 'dala-token-listener',
-    INSTANCE_ID: process.env.INSTANCE_ID
+    INSTANCE_ID: process.env.INSTANCE_ID,
     serializers: { error: bunyan.stdSerializers.err }
 }
 var log = bunyan.createLogger(loggerDefinition);
