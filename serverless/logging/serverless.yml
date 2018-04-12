@@ -61,7 +61,7 @@ resources:
                 Action: lambda:InvokeFunction
                 SourceArn: arn:aws:logs:${self:provider.region}:${env:AWS_ACCOUNT_ID}:*
                 Principal: logs.${self:provider.region}.amazonaws.com
-                FunctionName:  arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:wala-logging-api-${self:provider.stage}-notifySlack
+                FunctionName:  arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-logging-api-${self:provider.stage}-notifySlack
 
                
 
