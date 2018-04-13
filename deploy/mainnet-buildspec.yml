@@ -12,7 +12,7 @@ phases:
     commands: 
       - npm install -g yarn
       - npm install -g serverless
-      - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile ropsten
+      - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile mainnet
   pre_build:
     commands:
       - echo 'serverless version -' `serverless --version`
@@ -21,11 +21,11 @@ phases:
     commands:
       - yarn
       - cp -f serverless/base/serverless.yml .
-      - serverless deploy --stage ropsten --profile ropsten
+      - serverless deploy --stage ropsten --profile mainnet
       - cp -f serverless/notifications/serverless.yml .
-      - serverless deploy --stage ropsten --profile ropsten
+      - serverless deploy --stage ropsten --profile mainnet
       - cp -f serverless/logging/serverless.yml .
-      - serverless deploy --stage ropsten --profile ropsten
+      - serverless deploy --stage ropsten --profile mainnet
   post_build:
     commands:
 artifacts:
