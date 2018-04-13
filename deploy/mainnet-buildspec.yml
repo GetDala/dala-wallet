@@ -3,10 +3,10 @@ env:
   variables:
     AWS_PROFILE: mainnet
   parameter-store:
-    AWS_ACCESS_KEY_ID: SERVERLESS_ROPSTEN_AWS_ACCESS_KEY
-    AWS_SECRET_ACCESS_KEY: SERVERLESS_ROPSTEN_AWS_ACCESS_SECRET
-    AWS_ACCOUNT_ID: ROPSTEN_ACCOUNTID
-    SLACK_WEBHOOK: ROPSTEN_SLACK_URL
+    AWS_ACCESS_KEY_ID: SERVERLESS_MAINNET_AWS_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY: SERVERLESS_MAINNET_AWS_ACCESS_SECRET
+    AWS_ACCOUNT_ID: MAINNET_ACCOUNTID
+    SLACK_WEBHOOK: MAINNET_SLACK_URL
 phases:
   install:
     commands: 
@@ -21,11 +21,11 @@ phases:
     commands:
       - yarn
       - cp -f serverless/base/serverless.yml .
-      - serverless deploy --stage ropsten --profile mainnet
+      - serverless deploy --stage mainnet --profile mainnet
       - cp -f serverless/notifications/serverless.yml .
-      - serverless deploy --stage ropsten --profile mainnet
+      - serverless deploy --stage mainnet --profile mainnet
       - cp -f serverless/logging/serverless.yml .
-      - serverless deploy --stage ropsten --profile mainnet
+      - serverless deploy --stage mainnet --profile mainnet
   post_build:
     commands:
 artifacts:
