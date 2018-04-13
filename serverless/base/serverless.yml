@@ -395,7 +395,7 @@ plugins:
   - serverless-scriptable-plugin
   - custom-serverless-plugin
   - serverless-aws-documentation
-  - serverless-plugin-custom-domain
+#  - serverless-plugin-custom-domain
 
 custom:
   vpcLinks:

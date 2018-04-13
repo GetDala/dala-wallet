@@ -42,6 +42,7 @@ custom:
         prod: 
             AWS_PROFILE: production
             SLACK: https://hooks.slack.com
+            SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
     prune:
         automatic: true
         number: 5

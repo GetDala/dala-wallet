@@ -1,0 +1,33 @@
+version: 0.2
+env:
+  variables:
+    AWS_PROFILE: ropsten
+  parameter-store:
+    AWS_ACCESS_KEY_ID: SERVERLESS_ROPSTEN_AWS_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY: SERVERLESS_ROPSTEN_AWS_ACCESS_SECRET
+    AWS_ACCOUNT_ID: ROPSTEN_ACCOUNTID
+    SLACK_WEBHOOK: ROPSTEN_SLACK_URL
+phases:
+  install:
+    commands: 
+      - npm install -g yarn
+      - npm install -g serverless
+      - cd / && serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY --profile ropsten
+  pre_build:
+    commands:
+      - echo 'serverless version -' `serverless --version`
+      - cd $CODEBUILD_SRC_DIR
+  build:
+    commands:
+      - yarn
+      - cp -f serverless/base/serverless.yml .
+      - serverless deploy --stage ropsten --profile ropsten
+      - cp -f serverless/notifications/serverless.yml .
+      - serverless deploy --stage ropsten --profile ropsten
+      - cp -f serverless/logging/serverless.yml .
+      - serverless deploy --stage ropsten --profile ropsten
+  post_build:
+    commands:
+artifacts:
+  files: 
+    - '**/*'
