@@ -442,6 +442,7 @@ custom:
       MIN_BALANCE: 0
       DALA_ACCOUNT_PRODUCT: 1
       PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
+      API_GATEWAY_DOMAIN: sandbox.dala.org
     ropsten:
       baseUri: dala-microraiden-stack.MicroRaidenNLBHostName
       vpcLinkId: k37w79 
