@@ -1,7 +1,7 @@
 version: 0.2
 env:
   variables:
-    AWS_PROFILE: ropsten
+    AWS_PROFILE: mainnet
   parameter-store:
     AWS_ACCESS_KEY_ID: SERVERLESS_ROPSTEN_AWS_ACCESS_KEY
     AWS_SECRET_ACCESS_KEY: SERVERLESS_ROPSTEN_AWS_ACCESS_SECRET
