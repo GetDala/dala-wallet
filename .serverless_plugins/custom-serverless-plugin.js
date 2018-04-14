@@ -58,6 +58,9 @@ class ServerlessPlugin {
       if (val.startsWith('{') && val.endsWith('}')) {
         return val.substring(1, 2).toUpperCase() + val.substring(2, val.length - 1) + 'Var';
       }
+      if(val.indexOf('-') != -1){
+        return val.replace('-', 'Dash');
+      }
       return val.substring(0, 1).toUpperCase() + val.substring(1);
     }).join('');
 
