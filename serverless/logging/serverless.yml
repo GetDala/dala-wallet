@@ -39,8 +39,8 @@ custom:
             AWS_PROFILE: sandbox
             SLACK: https://hooks.slack.com
             SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
-        prod: 
-            AWS_PROFILE: production
+        mainnet: 
+            AWS_PROFILE: mainnet
             SLACK: https://hooks.slack.com
             SLACK_WEBHOOK: ${env:SLACK_WEBHOOK}
     prune:
