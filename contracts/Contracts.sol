@@ -31,7 +31,7 @@ contract DalaWallet {
         var success = erc20.transfer(destination, balance);
         if (success) {
             LogSweep(msg.sender, destination, token, balance);
-        }
+        } 
         return success;
     }
 
