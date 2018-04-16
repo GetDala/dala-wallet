@@ -462,7 +462,7 @@ custom:
       baseUri: dala-microraiden-stack.MicroRaidenNLBHostName
       vpcLinkId: iwrl4g 
       DEFAULT_GAS: 4500000
-      DESTINATION_ADDRESS: "c7a600960cb0375def7d90ce57c98955d8622ca0"
+      DESTINATION_ADDRESS: "0xc7a600960cb0375def7d90ce57c98955d8622ca0"
       TOKEN_ADDRESS: "0xa87c3ec87eb802aad080df0adb331e504d327e5d"
       MIN_BALANCE: 0
       DALA_ACCOUNT_PRODUCT: 1
