@@ -33,7 +33,7 @@ externalTransfer = lambdaClient.get_function(
 class PaywalledResourceBase(Expensive):
     def unauthorizedPost(self, url, lambdaFunction):
         senderAddress = request.headers.get('rdn-sender-address')
-        body = request.json
+        body = request.get_json(silent=True)
         response = lambdaClient.invoke(
             FunctionName=lambdaFunction,
             Payload=json.dumps({
@@ -51,7 +51,7 @@ class PaywalledResourceBase(Expensive):
         decoded = jwt.decode(request.headers.get(
             'authorization'), verify=False)
         senderAddress = request.headers.get('rdn-sender-address')
-        body = request.json
+        body = request.get_json(silent=True)
 
         response = lambdaClient.invoke(
             FunctionName=lambdaFunction,

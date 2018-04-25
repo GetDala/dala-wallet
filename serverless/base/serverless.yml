@@ -409,7 +409,7 @@ custom:
         enabled: true
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-microraidenChannelBlockProxy
       ApiGatewayMethodV1WalletsPost: 
-        enabled: false
+        enabled: true
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-createWallet
       ApiGatewayMethodV1InternalDashtransfersPost:
         enabled: false
