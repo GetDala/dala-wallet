@@ -201,6 +201,7 @@ functions:
   #fineract
   finTokenTransferDeposit:
     handler: src/fineract/steps.tokenTransferDeposit
+    timeout: 30
     package:
       include:
         - src/fineract/**
@@ -208,6 +209,7 @@ functions:
         - src/model/**
   finCreateClient:
     handler: src/fineract/steps.createClient
+    timeout: 30
     package:
       include:
         - src/fineract/**
@@ -215,6 +217,7 @@ functions:
         - src/model/**
   finCreateAccount:
     handler: src/fineract/steps.createAccount
+    timeout: 30
     package:
       include:
         - src/fineract/**
@@ -222,6 +225,7 @@ functions:
         - src/model/**
   finApproveAccount:
     handler: src/fineract/steps.approveAccount
+    timeout: 30
     package:
       include:
         - src/fineract/**
@@ -229,6 +233,7 @@ functions:
         - src/model/**
   finActivateAccount:
     handler: src/fineract/steps.activateAccount
+    timeout: 30
     package:
       include:
         - src/fineract/**
