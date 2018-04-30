@@ -278,7 +278,7 @@ functions:
       USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
   #api endpoints
   authenticate:
-    timeout: 30
+    timeout: 300
     handler: src/users/handler.authenticate
     environment:
       CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
@@ -293,7 +293,7 @@ functions:
           cors: true
           private: true
   registerUser:
-    timeout: 30
+    timeout: 300
     handler: src/users/handler.register
     environment:
       CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
@@ -308,7 +308,7 @@ functions:
           cors: true
           private: true
   createWallet:
-    timeout: 30
+    timeout: 300
     handler: src/wallets/handler.create
     package:
       include:
@@ -335,7 +335,7 @@ functions:
           private: true
   createInternalTransfer:
     handler: src/transfers/handler.createInternalTransfer
-    timeout: 30
+    timeout: 300
     package:
       include: 
         - src/transfers/**
@@ -349,7 +349,7 @@ functions:
           private: true
           cfAuthorizer: DalaWalletAuthorizer
   createExternalTransfer:
-    timeout: 30
+    timeout: 300
     handler: src/transfers/handler.createExternalTransfer
     package:
       include: 
