@@ -86,7 +86,10 @@ module.exports.createAccount = (event, context) => {
   return getSavingsAccount(address)
     .then(createSavingsAccount)
     .then(context.succeed)
-    .catch(context.fail);
+    .catch(error=>{
+      console.log(JSON.stringify(error));
+      context.fail(error);
+    });
 
   function getProduct() {
     return Promise.resolve(process.env.DALA_ACCOUNT_PRODUCT);
@@ -139,7 +142,10 @@ module.exports.approveAccount = (event, context) => {
   return getSavingsAccount(address)
     .then(approve)
     .then(context.succeed)
-    .catch(context.fail);
+    .catch(error=>{
+      console.log(JSON.stringify(error));
+      context.fail(error);
+    });
 
   function approve(result) {
     let fa = result;
@@ -167,7 +173,10 @@ module.exports.activateAccount = (event, context) => {
   return getSavingsAccount(address)
     .then(activate)
     .then(context.succeed)
-    .catch(context.fail);
+    .catch(error=>{
+      console.log(JSON.stringify(error));
+      context.fail(error);
+    });
 
   function activate(result) {
     let fa = result;
