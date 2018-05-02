@@ -119,21 +119,19 @@ module.exports.approveAccount = (event, context) => {
     .then(context.succeed)
     .catch(error => {
       console.log(JSON.stringify(error));
-      context.fail(error => {
-        console.log(JSON.stringify(error));
-        if (error.errors && error.errors.length) {
-          if (
-            error.errors.filter(
-              e => e.userMessageGlobalisationCode === 'validation.msg.savingsaccount.approval.not.in.submittedandpendingapproval.state'
-            ).length > 0
-          ) {
-            return context.succeed({
-              code: 'AccountAlreadyApproved'
-            });
-          }
+      console.log(JSON.stringify(error));
+      if (error.errors && error.errors.length) {
+        if (
+          error.errors.filter(
+            e => e.userMessageGlobalisationCode === 'validation.msg.savingsaccount.approval.not.in.submittedandpendingapproval.state'
+          ).length > 0
+        ) {
+          return context.succeed({
+            code: 'AccountAlreadyApproved'
+          });
         }
-        return context.fail(error);
-      });
+      }
+      return context.fail(error);
     });
 
   function approve(result) {
