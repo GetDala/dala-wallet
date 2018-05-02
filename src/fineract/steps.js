@@ -163,7 +163,7 @@ module.exports.activateAccount = (event, context) => {
             ).length > 0
           ) {
             return context.succeed({
-              code: 'AccountAlreadyApproved'
+              code: 'AccountAlreadyActivated'
             });
           }
         }
