@@ -153,7 +153,22 @@ module.exports.activateAccount = (event, context) => {
     .then(context.succeed)
     .catch(error => {
       console.log(JSON.stringify(error));
-      context.fail(error);
+      context.fail(error => {
+        console.log(JSON.stringify(error));
+        console.log(JSON.stringify(error));
+        if (error.errors && error.errors.length) {
+          if (
+            error.errors.filter(
+              e => e.userMessageGlobalisationCode === 'validation.msg.savingsaccount.activate.not.in.approved.state'
+            ).length > 0
+          ) {
+            return context.succeed({
+              code: 'AccountAlreadyApproved'
+            });
+          }
+        }
+        return context.fail(error);
+      });
     });
 
   function activate(result) {
