@@ -251,6 +251,7 @@ functions:
           cors: true
   onFineractWebhookEvent:
     handler: src/fineract/listeners.onFineractWebhookEvent
+    timeout: 120
     package:
       include: 
         - src/fineract/**

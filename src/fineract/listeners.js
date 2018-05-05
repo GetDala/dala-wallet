@@ -34,7 +34,12 @@ module.exports.onFineractWebhookEvent = (event, context) => {
   });
   return Promise.all(promises)
     .then(() => context.succeed(event))
-    .catch(context.fail);
+    .catch(error=>{
+      console.log(JSON.stringify(error));
+      return context.succeed({
+        error
+      })
+    });
 };
 
 const onWebhook = event => {
