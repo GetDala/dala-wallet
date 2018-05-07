@@ -16,7 +16,7 @@ module.exports.get = (event, context) => {
         address,
         totalDeposits: summary.totalDeposits,
         totalWithdrawals: summary.totalWithdrawals,
-        balance: summary.balance
+        balance: summary.accountBalance
       });
       return context.succeed({
         statusCode: 200,
