@@ -378,7 +378,6 @@ functions:
           method: get
           cors: true
           private: true
-          cfAuthorizer: DalaWalletAuthorizer
   #microraiden proxies
   microraidenChannelBlockProxy:
     handler: src/lib/nofunction.ignore
