@@ -415,7 +415,7 @@ functions:
 
 plugins:
   - serverless-secrets
-  - serverless-prune-plugin
+  # - serverless-prune-plugin
   - serverless-plugin-cfauthorizer
   - serverless-scriptable-plugin
   - custom-serverless-plugin
@@ -454,9 +454,9 @@ custom:
       ApiGatewayMethodV1UsersPost: 
         enabled: false
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-registerUser
-  prune:
-    automatic: true
-    number: 5
+  # prune:
+  #   automatic: true
+  #   number: 5
   cfAuthorizers:
     DalaWalletAuthorizer:
       Type: COGNITO_USER_POOLS
