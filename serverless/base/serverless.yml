@@ -427,9 +427,6 @@ custom:
     baseUri: ${self:custom.profiles.${self:provider.stage}.baseUri}
     vpcLinkId: ${self:custom.profiles.${self:provider.stage}.vpcLinkId}
     apis:
-      ApiGatewayMethodV1AccountsAddressVarGet:
-        enabled: false
-        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-getAccount
       ApiGatewayMethodApi1ChannelsSenderVarGet:
         enabled: true
         functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-microraidenChannelProxy
