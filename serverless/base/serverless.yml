@@ -364,6 +364,20 @@ functions:
           cors: true
           private: true
           cfAuthorizer: DalaWalletAuthorizer
+  getTransactionCount:
+    timeout: 300,
+    handler: src/transactions/handler.getCount
+    package:
+      include:
+        - src/transactions/**
+        - src/common/**
+        - src/model/**
+    events:
+      - http:
+          path: v1/transactions/{address}/count
+          method: get
+          cors: true
+          private: true
   getAccount:
     timeout: 300
     handler: src/accounts/handler.get
