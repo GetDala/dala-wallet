@@ -349,21 +349,21 @@ functions:
           cors: true
           private: true
           cfAuthorizer: DalaWalletAuthorizer
-  createExternalTransfer:
-    timeout: 300
-    handler: src/transfers/handler.createExternalTransfer
-    package:
-      include: 
-        - src/transfers/**
-        - src/common/**
-        - src/model/**
-    events:
-      - http:
-          path: v1/external-transfers
-          method: post
-          cors: true
-          private: true
-          cfAuthorizer: DalaWalletAuthorizer
+  # createExternalTransfer:
+  #   timeout: 300
+  #   handler: src/transfers/handler.createExternalTransfer
+  #   package:
+  #     include: 
+  #       - src/transfers/**
+  #       - src/common/**
+  #       - src/model/**
+  #   events:
+  #     - http:
+  #         path: v1/external-transfers
+  #         method: post
+  #         cors: true
+  #         private: true
+  #         cfAuthorizer: DalaWalletAuthorizer
   getTransactionCount:
     timeout: 300,
     handler: src/transactions/handler.getCount
