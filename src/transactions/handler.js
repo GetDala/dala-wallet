@@ -15,33 +15,31 @@ module.exports.getCount = (event, context) => {
         operatorsAliases: false
       });
       let { address } = event.pathParameters;
-      getSavingsAccount(address)
-        .then(account => {
-          if (account) {
-            return sequelize
-              .query(`SELECT COUNT(*) FROM m_savings_account_transactions WHERE savings_account_id = ${account.savingsId}`)
-              .then(rows => {
-                console.log(rows);
-                return context.succeed({
-                  statusCode: 200,
-                  body: JSON.stringify({
-                    address,
-                    transactionCount: rows[0]
-                  })
-                });
-              })
-              .catch(context.fail);
-          } else {
+      return getSavingsAccount(address).then(account => {
+        console.log('have savings account', account);
+        if (account) {
+          console.log('calling sequelize');
+          return sequelize.query(`SELECT COUNT(*) FROM m_savings_account_transactions WHERE savings_account_id = ${account.savingsId}`).then(rows => {
+            console.log(rows);
             return context.succeed({
               statusCode: 200,
               body: JSON.stringify({
                 address,
-                transactionCount: 0
+                transactionCount: rows[0]
               })
             });
-          }
-        })
-        .catch(context.fail);
+          });
+        } else {
+          console.log('no account');
+          return context.succeed({
+            statusCode: 200,
+            body: JSON.stringify({
+              address,
+              transactionCount: 0
+            })
+          });
+        }
+      });
     })
     .catch(context.fail);
 };

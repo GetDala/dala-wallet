@@ -369,7 +369,7 @@ functions:
   #         private: true
   #         cfAuthorizer: DalaWalletAuthorizer
   getTransactionCount:
-    timeout: 300,
+    timeout: 300
     handler: src/transactions/handler.getCount
     package:
       include:
