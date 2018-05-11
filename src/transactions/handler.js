@@ -12,7 +12,7 @@ module.exports.getCount = (event, context) => {
         process.env.DALA_STORAGE_CLUSTER
       }:${process.env.STAGING_DATABASE_ENDPOINT_PORT}/${process.env.DALA_STORAGE_PORT}`;
       const sequelize = new Sequelize(databaseAddress, {
-          operatorAliases: false
+        operatorsAliases: false
       });
       let { address } = event.pathParameters;
       getSavingsAccount(address)
