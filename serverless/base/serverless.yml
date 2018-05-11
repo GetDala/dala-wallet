@@ -35,10 +35,14 @@ provider:
     ON_WEBHOOK_RECEIVED_STATE_MACHINE: ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
     ON_EXTERNAL_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnExternalTransferStateMachineArn.Value}
     DALA_ACCOUNT_PRODUCT: ${self:custom.profiles.${self:provider.stage}.DALA_ACCOUNT_PRODUCT}
+    DALA_STORAGE_USERNAME: ${ssm:/dala-storage/${self:provider.stage}/username}
+    DALA_STORAGE_CLUSTER: ${ssm:/dala-storage/${self:provider.stage}/cluster}
+    DALA_STORAGE_PORT: ${ssm:/dala-storage/${self:provider.stage}/port}
   environmentSecrets:
     PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
     RPC_SERVER: '/${self:service}/${self:provider.stage}/RPC_SERVER'
     FROM_ADDRESS: '/${self:service}/${self:provider.stage}/FROM_ADDRESS'
+    DALA_STORAGE_PASSWORD: '/dala-storage/${self:provider.stage}/password'
   iamRoleStatements:
     - Effect: Allow
       Action:
