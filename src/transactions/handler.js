@@ -11,7 +11,9 @@ module.exports.getCount = (event, context) => {
       const databaseAddress = `postgres://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
         process.env.DALA_STORAGE_CLUSTER
       }:${process.env.STAGING_DATABASE_ENDPOINT_PORT}/${process.env.DALA_STORAGE_PORT}`;
-      const sequelize = new Sequelize(databaseAddress);
+      const sequelize = new Sequelize(databaseAddress, {
+          operatorAliases: false
+      });
       let { address } = event.pathParameters;
       getSavingsAccount(address)
         .then(account => {
