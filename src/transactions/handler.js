@@ -8,9 +8,10 @@ const secretsPromise = secretsClient.load();
 module.exports.getCount = (event, context) => {
   return secretsPromise
     .then(() => {
-      const databaseAddress = `postgres://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
+      const databaseAddress = `mysql://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
         process.env.DALA_STORAGE_CLUSTER
-      }:${process.env.STAGING_DATABASE_ENDPOINT_PORT}/${process.env.DALA_STORAGE_PORT}`;
+      }:${process.env.DALA_STORAGE_PORT}/mifostenant-default`;
+      console.log(databaseAddress);
       const sequelize = new Sequelize(databaseAddress, {
         operatorsAliases: false
       });
@@ -19,13 +20,13 @@ module.exports.getCount = (event, context) => {
         console.log('have savings account', account);
         if (account) {
           console.log('calling sequelize');
-          return sequelize.query(`SELECT COUNT(*) FROM m_savings_account_transactions WHERE savings_account_id = ${account.savingsId}`).then(rows => {
+          return sequelize.query(`SELECT COUNT(*) as transactionCount FROM m_savings_account_transaction WHERE savings_account_id = ${account.savingsId}`).then(rows => {
             console.log(rows);
             return context.succeed({
               statusCode: 200,
               body: JSON.stringify({
                 address,
-                transactionCount: rows[0]
+                transactionCount: rows[0][0].transactionCount
               })
             });
           });

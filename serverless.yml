@@ -1,0 +1,657 @@
+service: dala-wallet-api
+package: 
+  exclude:
+    - env/**
+    - microraiden/**
+    - dala_proxy.db*
+    - private-key
+    - secret.js
+    - truffle.js
+
+provider:
+  name: aws
+  stage: ${opt:stage, self:custom.defaultStage}
+  profile: ${opt:profile}
+  region: eu-west-1
+  runtime: nodejs6.10
+  vpc:
+    securityGroupIds: 
+      - Fn::ImportValue: dala-infrastructure-DalaInstanceSecurityGroupId
+    subnetIds:
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetAId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
+  environment:
+    PAYMENT_TYPE_ON_CHAIN_DEPOSIT: ${self:custom.profiles.${self:provider.stage}.PAYMENT_TYPE_ON_CHAIN_DEPOSIT}
+    TOKEN_ADDRESS: ${self:custom.profiles.${self:provider.stage}.TOKEN_ADDRESS}
+    MIN_BALANCE: ${self:custom.profiles.${self:provider.stage}.MIN_BALANCE}
+    DESTINATION_ADDRESS: ${self:custom.profiles.${self:provider.stage}.DESTINATION_ADDRESS}
+    FINERACT_TENANT_IDENTIFIER: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_TENANT_IDENTIFIER}
+    FINERACT_API_ENDPOINT_BASE: ${ssm:/${self:service}/${self:provider.stage}/FINERACT_API_ENDPOINT_BASE}
+    DEFAULT_GAS: ${self:custom.profiles.${self:provider.stage}.DEFAULT_GAS}
+    ON_TOKEN_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
+    ON_CREATE_ON_CHAIN_WALLET_STATE_MACHINE: ${self:resources.Outputs.OnCreateOnChainWalletStateMachineArn.Value}
+    ON_USER_CONFIRMED_STATE_MACHINE: ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
+    ON_WEBHOOK_RECEIVED_STATE_MACHINE: ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
+    ON_EXTERNAL_TRANSFER_STATE_MACHINE: ${self:resources.Outputs.OnExternalTransferStateMachineArn.Value}
+    DALA_ACCOUNT_PRODUCT: ${self:custom.profiles.${self:provider.stage}.DALA_ACCOUNT_PRODUCT}
+    DALA_STORAGE_USERNAME: ${ssm:/dala-storage/${self:provider.stage}/username}
+    DALA_STORAGE_CLUSTER: ${ssm:/dala-storage/${self:provider.stage}/cluster}
+    DALA_STORAGE_PORT: ${ssm:/dala-storage/${self:provider.stage}/port}
+  environmentSecrets:
+    PRIVATE_KEY: '/${self:service}/${self:provider.stage}/PRIVATE_KEY'
+    RPC_SERVER: '/${self:service}/${self:provider.stage}/RPC_SERVER'
+    FROM_ADDRESS: '/${self:service}/${self:provider.stage}/FROM_ADDRESS'
+    DALA_STORAGE_PASSWORD: '/dala-storage/${self:provider.stage}/password'
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - states:StartExecution
+      Resource:
+        - ${self:resources.Outputs.OnTokenTransferStateMachineArn.Value}
+        - ${self:resources.Outputs.OnCreateOnChainWalletStateMachineArn.Value}
+        - ${self:resources.Outputs.OnUserConfirmedStateMachineArn.Value}
+        - ${self:resources.Outputs.OnWebhookReceivedStateMachineArn.Value}
+        - ${self:resources.Outputs.OnExternalTransferStateMachineArn.Value}
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+      Resource:
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWalletEvents
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTokenEvents
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWallets
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaTransfers
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractSavingsAccounts
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractClients
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractDeposits
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractTransfers
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWithdrawals
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWebhookEvents
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/TokenTransfers
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/DalaWallets/index/idx_dalaWallets_address_timestamp
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractSavingsAccounts/index/idx_fineractSavingsAccounts_username
+    - Effect: Allow
+      Action:
+        - cognito-idp:AdminCreateUser
+        - cognito-idp:AdminInitiateAuth
+        - cognito-idp:AdminRespondToAuthChallenge
+        - cognito-idp:AdminGetUser
+        - cognito-idp:AdminResetUserPassword
+        - cognito-idp:AdminConfirmSignUp
+        - cognito-idp:AdminUpdateUserAttributes
+      Resource:
+        - ${self:resources.Outputs.CognitoUserPoolDalaUserPoolArn.Value}
+  apiKeys:
+    - ${self:service}-${self:provider.stage}
+
+functions:
+  #dynamodb stream listeners
+  onDalaTokenEvent:
+    handler: src/token/listeners.onDalaTokenEvent
+    package:
+      include: 
+        - src/token/**
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DalaTokenEventsDynamoDbTable
+              - StreamArn
+  onDalaWalletEvent:
+    handler: src/common/listeners.onDalaWalletEvent
+    package: 
+      include:
+        - src/common/**
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - DalaWalletEventsDynamoDbTable
+              - StreamArn
+  #state machine steps
+  ethGetTransactionReceipt:
+    handler: src/blockchain/ethereum-steps.getTransactionReceipt
+    package:
+      include:
+        - src/blockchain/ethereum-steps.js
+  ethSweepWallet:
+    handler: src/blockchain/token-sweeper.sweep
+    timeout: 30
+    package:
+      include:
+        - src/blockchain/token-sweeper.js
+        - lib/DalaWallet.json
+  ethCreateWallet:
+    handler: src/blockchain/dala-wallet.create
+    timeout: 30
+    package:
+      include:
+        - src/blockchain/dala-wallet.js
+        - src/blockchain/utils.js
+        - lib/DalaWallet.json
+  walletProcessing:
+    handler: src/wallets/steps.walletProcessing
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  walletFailed:
+    handler: src/wallets/steps.walletFailed
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  getWalletByAddress:
+    handler: src/wallets/steps.getWalletByAddress
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  walletCreated:
+    handler: src/wallets/steps.walletCreated
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  updateWalletAddress:
+    handler: src/wallets/steps.updateWalletAddress
+    package:
+      include:
+        - src/wallets/**
+        - src/common/**
+  transferProcessing:
+    handler: src/transfers/steps.transferProcessing
+    package:
+      include:
+        - src/transfers/**
+        - src/common/**
+  transferComplete:
+    handler: src/transfers/steps.transferComplete
+    package:
+      include:
+        - src/transfers/**
+        - src/common/**
+  transferFailed:
+    handler: src/transfers/steps.transferFailed
+    package:
+      include:
+        - src/transfers/**
+        - src/common/**
+  tokenTransferProcessing:
+    handler: src/token/steps.transferProcessing
+    package:
+      include:
+        - src/token/**
+        - src/common/**
+  tokenTransferComplete:
+    handler: src/token/steps.transferComplete
+    package:
+      include:
+        - src/token/**
+        - src/common/**
+  tokenTransferFailed:
+    handler: src/token/steps.transferFailed
+    package:
+      include:
+        - src/token/**
+        - src/common/**
+  #fineract
+  finTokenTransferDeposit:
+    handler: src/fineract/steps.tokenTransferDeposit
+    timeout: 30
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  finCreateClient:
+    handler: src/fineract/steps.createClient
+    timeout: 30
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  finCreateAccount:
+    handler: src/fineract/steps.createAccount
+    timeout: 30
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  finApproveAccount:
+    handler: src/fineract/steps.approveAccount
+    timeout: 30
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  finActivateAccount:
+    handler: src/fineract/steps.activateAccount
+    timeout: 30
+    package:
+      include:
+        - src/fineract/**
+        - src/common/**
+        - src/model/**
+  onFineractWebhook:
+    handler: src/fineract/hooks.onWebhook
+    package:
+      include:
+        - src/fineract/**
+    events:
+      - http:
+          path: v1/fineract-webhooks
+          method: post
+          cors: true
+  onFineractWebhookEvent:
+    handler: src/fineract/listeners.onFineractWebhookEvent
+    timeout: 120
+    package:
+      include: 
+        - src/fineract/**
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - FineractWebhookEventsDynamoDbTable
+              - StreamArn
+  userSetDefaultAccountAddress:
+    handler: src/users/steps.setDefaultAccountAddress 
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
+  userSetClientId:
+    handler: src/users/steps.setClientId
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
+  userSetDefaultAccountId:
+    handler: src/users/steps.setDefaultAccountId
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
+  #api endpoints
+  authenticate:
+    timeout: 300
+    handler: src/users/handler.authenticate
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
+    package: 
+      include:
+        - src/users/**
+    events:
+      - http:
+          path: v1/authentications
+          method: post
+          cors: true
+          private: true
+  registerUser:
+    timeout: 300
+    handler: src/users/handler.register
+    environment:
+      CLIENT_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolClientId.Value}
+      USER_POOL_ID: ${self:resources.Outputs.CognitoUserPoolDalaUserPoolId.Value}
+    package:
+      include:
+        - src/users/**
+    events:
+      - http:
+          path: v1/users
+          method: post
+          cors: true
+          private: true
+  createWallet:
+    timeout: 300
+    handler: src/wallets/handler.create
+    package:
+      include:
+        - src/wallets/handler.js
+        - src/common/**
+    events:
+      - http:
+          path: v1/wallets
+          method: post
+          cors: true
+          private: true
+          cfAuthorizer: DalaWalletAuthorizer
+  subscribe:
+    handler: src/subscribers/handler.post
+    package:
+      include: 
+        - src/subscribers/**
+        - src/common/**
+    events:
+      - http:
+          path: v1/subscribers
+          method: post
+          cors: true
+          private: true
+  createInternalTransfer:
+    handler: src/transfers/handler.createInternalTransfer
+    timeout: 300
+    package:
+      include: 
+        - src/transfers/**
+        - src/common/**
+        - src/model/**
+    events:
+      - http:
+          path: v1/internal-transfers
+          method: post
+          cors: true
+          private: true
+          cfAuthorizer: DalaWalletAuthorizer
+  # createExternalTransfer:
+  #   timeout: 300
+  #   handler: src/transfers/handler.createExternalTransfer
+  #   package:
+  #     include: 
+  #       - src/transfers/**
+  #       - src/common/**
+  #       - src/model/**
+  #   events:
+  #     - http:
+  #         path: v1/external-transfers
+  #         method: post
+  #         cors: true
+  #         private: true
+  #         cfAuthorizer: DalaWalletAuthorizer
+  getTransactionCount:
+    timeout: 300
+    handler: src/transactions/handler.getCount
+    package:
+      include:
+        - src/transactions/**
+        - src/common/**
+        - src/model/**
+    events:
+      - http:
+          path: v1/transactions/{address}/count
+          method: get
+          cors: true
+          private: true
+  getAccount:
+    timeout: 300
+    handler: src/accounts/handler.get
+    package:
+      include:
+        - src/accounts/**
+        - src/common/**
+        - src/model/**
+    events:
+      - http:
+          path: v1/accounts/{address}
+          method: get
+          cors: true
+          private: true
+  #microraiden proxies
+  microraidenChannelBlockProxy:
+    handler: src/lib/nofunction.ignore
+    package:
+      include:
+        - src/lib/nofunction.js
+    events:
+      - http:
+          path: api/1/channels/{sender}/{block}
+          method: get
+          request:
+            parameters:
+              paths:
+                sender: true
+                block: true
+          cors: true
+          private: true
+  microraidenChannelProxy:
+    handler: src/lib/nofunction.ignore
+    package:
+      include:
+        - src/lib/nofunction.js
+    events:
+      - http:
+          path: api/1/channels/{sender}
+          method: get
+          request:
+            parameters:
+              paths:
+                sender: true
+          cors: true
+          private: true
+        
+  
+
+plugins:
+  - serverless-secrets
+  # - serverless-prune-plugin
+  - serverless-plugin-cfauthorizer
+  - serverless-scriptable-plugin
+  - custom-serverless-plugin
+  - serverless-aws-documentation
+  - serverless-plugin-custom-domain
+
+custom:
+  vpcLinks:
+    baseUri: ${self:custom.profiles.${self:provider.stage}.baseUri}
+    vpcLinkId: ${self:custom.profiles.${self:provider.stage}.vpcLinkId}
+    apis:
+      ApiGatewayMethodApi1ChannelsSenderVarGet:
+        enabled: true
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-microraidenChannelProxy
+      ApiGatewayMethodApi1ChannelsSenderVarBlockVarGet:
+        enabled: true
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-microraidenChannelBlockProxy
+      ApiGatewayMethodV1WalletsPost: 
+        enabled: false
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-createWallet
+      ApiGatewayMethodV1InternalDashtransfersPost:
+        enabled: false
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-createInternalTransfer
+      ApiGatewayMethodV1ExternalDashtransfersPost:
+        enabled: false
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-createExternalTransfer
+      ApiGatewayMethodV1SubscribersPost: 
+        enabled: false
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-subscribe
+      ApiGatewayMethodV1AuthenticationsPost: 
+        enabled: false
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-authenticate
+      ApiGatewayMethodV1UsersPost: 
+        enabled: false
+        functionArn: arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-api-${self:provider.stage}-registerUser
+  # prune:
+  #   automatic: true
+  #   number: 5
+  cfAuthorizers:
+    DalaWalletAuthorizer:
+      Type: COGNITO_USER_POOLS
+      Name: DalaUsers
+      IdentitySource: "method.request.header.Authorization"
+      ProviderARNs:
+        - ${self:resources.Outputs.CognitoUserPoolDalaUserPoolArn.Value}
+  defaultStage: dev
+  profiles:
+    dev:
+      baseUri: dala-microraiden-stack.MicroRaidenNLBHostName
+      vpcLinkId: 2ovpes 
+      DEFAULT_GAS: 4500000
+      DESTINATION_ADDRESS: "0xDD86986bA67b4A1A8E7BE4833Dde2c09243333D7"
+      TOKEN_ADDRESS: "0x5d689a3de1a648f85d23231a2d95fa89ce3d41fc"
+      MIN_BALANCE: 0
+      DALA_ACCOUNT_PRODUCT: 1
+      PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
+      API_GATEWAY_DOMAIN: sandbox.dala.org
+    ropsten:
+      baseUri: dala-microraiden-stack.MicroRaidenNLBHostName
+      vpcLinkId: k37w79 
+      DEFAULT_GAS: 4500000
+      DESTINATION_ADDRESS: "0xC53246cc72a8b37FBaCCA32E1AB28C72F24bDc6B"
+      TOKEN_ADDRESS: "0x5d689a3de1a648f85d23231a2d95fa89ce3d41fc"
+      MIN_BALANCE: 0
+      DALA_ACCOUNT_PRODUCT: 1
+      PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
+      API_GATEWAY_DOMAIN: ropsten.dala.org
+    mainnet:
+      baseUri: dala-microraiden-stack.MicroRaidenNLBHostName
+      vpcLinkId: iwrl4g 
+      DEFAULT_GAS: 4500000
+      DESTINATION_ADDRESS: "0xc7a600960cb0375def7d90ce57c98955d8622ca0"
+      TOKEN_ADDRESS: "0xa87c3ec87eb802aad080df0adb331e504d327e5d"
+      MIN_BALANCE: 0
+      DALA_ACCOUNT_PRODUCT: 1
+      PAYMENT_TYPE_ON_CHAIN_DEPOSIT: 1
+      API_GATEWAY_DOMAIN: mainnet.dala.org
+  serverlessSecrets:
+    providerOptions:
+      region: ${self:provider.region}
+    keys:
+      default: ${self:resources.Outputs.DalaWalletKeyAliasName.Value}
+  scriptHooks:
+    after:deploy:compileEvents: 
+      - scripts/trimAwsLogPermissions.js
+  domain: 
+    name: ${self:custom.profiles.${self:provider.stage}.API_GATEWAY_DOMAIN}
+    basePath: api
+
+resources:
+  Outputs:
+    DalaOnChainWalletCreatedSNSTopicArn:
+      Value:
+        Ref: DalaOnChainWalletCreatedSNSTopic
+    DalaWalletCreatedSNSTopicArn:
+      Value:
+        Ref: DalaWalletCreatedSNSTopic
+    DalaWalletDepositSNSTopicArn:
+      Value:
+        Ref: DalaWalletDepositSNSTopic
+    DalaWalletTransferSNSTopicArn:
+      Value:
+        Ref: DalaWalletTransferSNSTopic
+    DalaWalletWithdrawalSNSTopicArn:
+      Value:
+        Ref: DalaWalletWithdrawalSNSTopic
+    DalaWalletStateMachineExecutionRoleArn:
+      Value:
+        Fn::GetAtt:
+          - DalaWalletStateMachineExecutionRole
+          - Arn
+    DalaWalletKeyAliasName:
+      Value:
+        Ref: DalaWalletKeyAlias
+    DalaWalletSMSRoleArn:
+      Value:
+        Fn::GetAtt:
+          - DalaWalletSMSRole
+          - Arn
+    CognitoUserPoolDalaUserPoolId:
+      Value:
+        Ref: CognitoUserPoolDalaUserPool
+    CognitoUserPoolDalaUserPoolArn:
+      Value:
+        Fn::GetAtt:
+          - CognitoUserPoolDalaUserPool
+          - Arn
+    CognitoUserPoolDalaUserPoolClientId:
+      Value: 
+        Ref: CognitoUserPoolDalaUserPoolClient
+    OnCreateOnChainWalletStateMachineArn:
+      Value:
+        Ref: OnCreateOnChainWalletStateMachine
+    OnTokenTransferStateMachineArn:
+      Value:
+        Ref: OnTokenTransferStateMachine
+    OnUserConfirmedStateMachineArn:
+      Value:
+        Ref: OnUserConfirmedStateMachine
+    OnWebhookReceivedStateMachineArn:
+      Value:
+        Ref: OnWebhookReceivedStateMachine
+    OnExternalTransferStateMachineArn:
+      Value:
+        Ref: OnExternalTransferStateMachine
+  Resources:
+    DalaWalletStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletStateMachineExecutionRole.yml):Role}
+    FineractClientsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractClientsDynamoDbTable.yml):Table}
+    FineractAccountsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractAccountsDynamoDbTable.yml):Table}
+    FineractTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractTransfersDynamoDbTable.yml):Table}
+    FineractWithdrawalsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractWithdrawalsDynamoDbTable.yml):Table}
+    FineractDepositsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractDepositsDynamoDbTable.yml):Table}
+    FineractWebhookEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/FineractWebhookEventsDynamoDbTable.yml):Table}
+    DalaTokenEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTokenEventsDynamoDbTable.yml):Table}
+    DalaWalletEventsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletEventsDynamoDbTable.yml):Table}
+    DalaWalletsDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaWalletsDynamoDbTable.yml):Table}
+    DalaTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/DalaTransfersDynamoDbTable.yml):Table}
+    TokenTransfersDynamoDbTable: ${file(./CloudFormation/DynamoDB/TokenTransfersDynamoDbTable.yml):Table}
+    DalaWalletKeyKMS: ${file(./CloudFormation/KMS/DalaWalletKeyKMS.yml):Key}
+    DalaWalletKeyAlias: ${file(./CloudFormation/KMS/DalaWalletKeyAlias.yml):Alias}
+    DalaWalletSMSRole: ${file(./CloudFormation/IAM/DalaWalletSMSRole.yml):Role} 
+    CognitoUserPoolDalaUserPool: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaUserPool.yml):UserPool}
+    CognitoUserPoolDalaUserPoolClient: ${file(./CloudFormation/Cognito/CognitoUserPoolDalaUserPoolClient.yml):UserPoolClient}
+    DalaOnChainWalletCreatedSNSTopic: ${file(./CloudFormation/SNS/DalaOnChainWalletCreatedSNSTopic.yml):Topic}
+    DalaWalletCreatedSNSTopic: ${file(./CloudFormation/SNS/DalaWalletCreatedSNSTopic.yml):Topic}
+    DalaWalletDepositSNSTopic: ${file(./CloudFormation/SNS/DalaWalletDepositSNSTopic.yml):Topic}
+    DalaWalletWithdrawalSNSTopic: ${file(./CloudFormation/SNS/DalaWalletWithdrawalSNSTopic.yml):Topic}
+    DalaWalletTransferSNSTopic: ${file(./CloudFormation/SNS/DalaWalletTransferSNSTopic.yml):Topic}
+    OnCreateOnChainWalletStateMachine: ${file(./CloudFormation/StateMachines/OnCreateOnChainWalletStateMachine.yml):StateMachine}  
+    OnTokenTransferStateMachine: ${file(./CloudFormation/StateMachines/OnTokenTransferStateMachine.yml):StateMachine}  
+    OnUserConfirmedStateMachine: ${file(./CloudFormation/StateMachines/OnUserConfirmedStateMachine.yml):StateMachine}
+    OnWebhookReceivedStateMachine: ${file(./CloudFormation/StateMachines/OnWebhookReceivedStateMachine.yml):StateMachine}
+    OnExternalTransferStateMachine: ${file(./CloudFormation/StateMachines/OnExternalTransferStateMachine.yml):StateMachine}
+    #these functions have to depend on each other in a chain otherwise a cloudformation throttle exception is hit
+    OnDalaTokenEventLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: OnDalaWalletEventLambdaFunction
+    OnDalaWalletEventLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: EthGetTransactionReceiptLambdaFunction
+    EthGetTransactionReceiptLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: EthSweepWalletLambdaFunction
+    EthSweepWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: EthCreateWalletLambdaFunction
+    EthCreateWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: WalletProcessingLambdaFunction
+    WalletProcessingLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: WalletFailedLambdaFunction
+    WalletFailedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: WalletCreatedLambdaFunction
+    WalletCreatedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: UpdateWalletAddressLambdaFunction
+    UpdateWalletAddressLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: TransferProcessingLambdaFunction
+    TransferProcessingLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: TransferCompleteLambdaFunction
+    TransferCompleteLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: TransferFailedLambdaFunction
+    TransferFailedLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: AuthenticateLambdaFunction
+    AuthenticateLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: RegisterUserLambdaFunction
+    RegisterUserLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: CreateWalletLambdaFunction
+    CreateWalletLambdaFunction:
+      Type: AWS::Lambda::Function
+      DependsOn: SubscribeLambdaFunction
+    SubscribeLambdaFunction:
+      Type: AWS::Lambda::Function
