@@ -384,7 +384,7 @@ functions:
           private: true
   getAccount:
     timeout: 300
-    handler: src/accounts/handler.get
+    handler: src/accounts/handler.getBalance
     package:
       include:
         - src/accounts/**
