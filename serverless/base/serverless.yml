@@ -382,7 +382,7 @@ functions:
           method: get
           cors: true
           private: true
-  getAccount:
+  getAccountWithSQL:
     timeout: 300
     handler: src/accounts/handler.getBalance
     package:
