@@ -14,9 +14,8 @@ module.exports = {
                 qs: params
             }, (error, response, body) => {
                 if (error) return reject(error);
-                console.log(body);
                 const json = body;
-                if((json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
+                if((response.statusCode >= 300) || (json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
                 return resolve(json);
             });
         });
@@ -35,7 +34,7 @@ module.exports = {
                 if (error) return reject(error);
                 console.log(body);
                 const json = body;
-                if((json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
+                if((response.statusCode >= 300) || (json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
                 return resolve(json);
             })
         });
@@ -54,7 +53,7 @@ module.exports = {
                 if (error) return reject(error);
                 console.log(body);
                 const json = body;
-                if((json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
+                if((response.statusCode >= 300) || (json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
                 return resolve(json);
             })
         });
@@ -72,7 +71,7 @@ module.exports = {
             }, (error, response, body) => {
                 if (error) return reject(error);
                 const json = body;
-                if((json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
+                if((response.statusCode >= 300) || (json.status && json.status >= 300)||(json.httpStatusCode && json.httpStatusCode >= 300)) return reject(json);
                 return resolve(json);
             })
         });
