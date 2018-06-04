@@ -58,7 +58,7 @@ module.exports.getTransactions = (event, context)=>{
           join m_savings_account sa on sa.id = sat.savings_account_id \
           left outer join m_account_transfer_transaction source on source.from_savings_transaction_id = sat.id \
           left outer join m_account_transfer_transaction target on target.to_savings_transaction_id = sat.id \
-          where sa.external_id = ${address} \
+          where sa.external_id = '${address}' \
           order by transactionId desc`
           return sequelize.query(query).then(rows => {
             return context.succeed({
