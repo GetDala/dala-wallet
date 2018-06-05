@@ -28,7 +28,7 @@ const transfers = api.accounttransfers();
 
 module.exports.onFineractWebhookEvent = (event, context) => {
   var promises = event.Records.map(record => {
-    if (record.eventName !== 'INSERT') return;
+    if (record.eventName !== 'INSERT') return Promise.resolve(null);
     const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
     return onWebhook(newItem.payload);
   });
