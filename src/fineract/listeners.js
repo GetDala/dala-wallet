@@ -44,7 +44,7 @@ module.exports.onFineractWebhookEvent = (event, context) => {
 
 const onWebhook = event => {
   console.log(JSON.stringify(event));
-  const { body, action, entity } = event;
+  let { body, action, entity } = event;
 
   switch (entity) {
     case Entities.Client:
