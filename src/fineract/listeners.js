@@ -73,7 +73,7 @@ const onWebhook = event => {
       .get(body.clientId)
       .then(client => {
         const { externalId, status, firstname, lastname, displayName, activationDate } = client;
-        return {
+        let result = {
           eventType: getEventType(`${entity}:${action}`),
           username: externalId,
           status: status.value,
@@ -86,8 +86,11 @@ const onWebhook = event => {
           surname: lastname,
           displayName: displayName
         };
+        console.log('handleClientWebhook:have result', result);
+        return result;
       })
       .then(payload => {
+        console.log('handleClientWebhook.writingEvent');
         return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload).save();
       })
       .catch(error => {
@@ -108,7 +111,8 @@ const onWebhook = event => {
       isTransaction ? savings.getTransaction(body.savingsId, body.resourceId) : Promise.resolve(null)
     ])
       .then(([client, savings, transaction]) => {
-        return {
+        console.log('handleSavingsAccountWebhook:have client, savings, transactions');
+        let result = {
           eventType: getEventType(`${entity}:${action}`),
           transactionId: transaction && transaction.id,
           address: savings.externalId,
@@ -121,8 +125,11 @@ const onWebhook = event => {
             day: transaction.date[2]
           }
         };
+        console.log('handleSavingsAccountWebhook:have result', result);
+        return result;
       })
       .then(payload => {
+        console.log('handleSavingsAccountWebhook.writingEvent');
         return new DalaWalletEvent(payload.accountId, EventTypes.WebhookReceived, payload).save();
       })
       .catch(error => {
@@ -147,7 +154,8 @@ const onWebhook = event => {
           savings.get(transfer.fromAccount.id),
           savings.get(transfer.toAccount.id)
         ]).then(([fromClient, toClient, fromAccount, toAccount]) => {
-          return {
+          console.log('handleAccountTransferWebhook:have fromClient, toClient, fromAccount, toAccount');
+          let result = {
             eventType: getEventType(`${entity}:${action}`),
             transactionId: body.resourceId,
             from: {
@@ -168,9 +176,12 @@ const onWebhook = event => {
             },
             description: transfer.transferDescription
           };
+          console.log('handleAccountTransferWebhook:have result', result);
+          return result;
         });
       })
       .then(payload => {
+        console.log('handleAccountTransferWebhook.writingEvent');
         return new DalaWalletEvent(`${payload.from.address}:${payload.to.address}`, EventTypes.WebhookReceived, payload).save();
       })
       .catch(error => {
