@@ -69,6 +69,7 @@ const onWebhook = event => {
 
   function handleClientWebhook() {
     //get client
+    console.log('handleClientWebhook.body', body);
     return clients
       .get(body.clientId)
       .then(client => {
@@ -105,6 +106,7 @@ const onWebhook = event => {
   }
 
   function handleSavingsAccountWebhook(isTransaction) {
+    console.log('handleSavingsAccountWebhook.body', body);
     return Promise.all([
       clients.get(body.clientId),
       savings.get(body.savingsId),
@@ -144,6 +146,7 @@ const onWebhook = event => {
   }
 
   function handleAccountTransferWebhook() {
+    console.log('handleAccountTransferWebhook.body', body);
     return transfers
       .get(body.resourceId)
       .then(transfer => {
