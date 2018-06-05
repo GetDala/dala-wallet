@@ -253,7 +253,7 @@ const onWebhook = event => {
           return {
             transferDate: transfer.transaction_date.split('-'),
             transferAmount: transfer.amount,
-            description: transfer.description,
+            transferDescription: transfer.description,
             fromClient: {
               id: transfer.fromClientId
             },
