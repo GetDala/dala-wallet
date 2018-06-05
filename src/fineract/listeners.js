@@ -58,6 +58,7 @@ const onWebhook = event => {
         case 'WITHDRAWAL':
           return handleSavingsAccountWebhook(true);
         default:
+          console.log('DEFAULT ... resolving empty object');
           return Promise.resolve({});
       }
     case Entities.AccountTransfer:
@@ -94,15 +95,15 @@ const onWebhook = event => {
         console.log('handleClientWebhook.writingEvent');
         return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload).save();
       })
-      .catch(error => {
-        console.log(error);
-        if (!error) {
-          console.log('handleClientWebhook NULL error mesage ... succeed');
-          return;
-        } else {
-          throw error;
-        }
-      });
+      // .catch(error => {
+      //   console.log(error);
+      //   if (!error) {
+      //     console.log('handleClientWebhook NULL error mesage ... succeed');
+      //     return;
+      //   } else {
+      //     throw error;
+      //   }
+      // });
   }
 
   function handleSavingsAccountWebhook(isTransaction) {
@@ -134,15 +135,15 @@ const onWebhook = event => {
         console.log('handleSavingsAccountWebhook.writingEvent');
         return new DalaWalletEvent(payload.accountId, EventTypes.WebhookReceived, payload).save();
       })
-      .catch(error => {
-        console.log(error);
-        if (!error) {
-          console.log('handleSavingsAccountWebhook: NULL error mesage ... succeed');
-          return;
-        } else {
-          throw error;
-        }
-      });
+      // .catch(error => {
+      //   console.log(error);
+      //   if (!error) {
+      //     console.log('handleSavingsAccountWebhook: NULL error mesage ... succeed');
+      //     return;
+      //   } else {
+      //     throw error;
+      //   }
+      // });
   }
 
   function handleAccountTransferWebhook() {
@@ -187,14 +188,14 @@ const onWebhook = event => {
         console.log('handleAccountTransferWebhook.writingEvent');
         return new DalaWalletEvent(`${payload.from.address}:${payload.to.address}`, EventTypes.WebhookReceived, payload).save();
       })
-      .catch(error => {
-        console.log(error);
-        if (!error) {
-          console.log('handleAccountTransferWebhook NULL error mesage ... succeed');
-          return;
-        } else {
-          throw error;
-        }
-      });
+      // .catch(error => {
+      //   console.log(error);
+      //   if (!error) {
+      //     console.log('handleAccountTransferWebhook NULL error mesage ... succeed');
+      //     return;
+      //   } else {
+      //     throw error;
+      //   }
+      // });
   }
 };
