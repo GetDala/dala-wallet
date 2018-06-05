@@ -72,8 +72,8 @@ const onWebhook = event => {
   let { body, action, entity } = event;
 
   switch (entity) {
-    case Entities.Client:
-      return handleClientWebhook();
+    // case Entities.Client:
+    //   return handleClientWebhook();
     case Entities.SavingsAccount:
       switch (action) {
         case 'ACTIVATE':
@@ -93,47 +93,47 @@ const onWebhook = event => {
       return Promise.resolve({});
   }
 
-  function handleClientWebhook() {
-    //get client
-    console.log('handleClientWebhook.body', body);
-    return clients
-      .get(body.clientId)
-      .then(client => {
-        const { externalId, status, firstname, lastname, displayName, activationDate } = client;
-        let result = {
-          eventType: getEventType(`${entity}:${action}`),
-          username: externalId,
-          status: status.value,
-          activationDate: {
-            year: activationDate[0],
-            month: activationDate[1],
-            day: activationDate[2]
-          },
-          firstName: firstname,
-          surname: lastname,
-          displayName: displayName
-        };
-        console.log('handleClientWebhook:have result', result);
-        return result;
-      })
-      .then(payload => {
-        console.log('handleClientWebhook.writingEvent');
-        return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload).save();
-      })
-      .catch(error => {
-        console.log('ERROR1', error);
-        throw error;
-      });
-    // .catch(error => {
-    //   console.log(error);
-    //   if (!error) {
-    //     console.log('handleClientWebhook NULL error mesage ... succeed');
-    //     return;
-    //   } else {
-    //     throw error;
-    //   }
-    // });
-  }
+  // function handleClientWebhook() {
+  //   //get client
+  //   console.log('handleClientWebhook.body', body);
+  //   return clients
+  //     .get(body.clientId)
+  //     .then(client => {
+  //       const { externalId, status, firstname, lastname, displayName, activationDate } = client;
+  //       let result = {
+  //         eventType: getEventType(`${entity}:${action}`),
+  //         username: externalId,
+  //         status: status.value,
+  //         activationDate: {
+  //           year: activationDate[0],
+  //           month: activationDate[1],
+  //           day: activationDate[2]
+  //         },
+  //         firstName: firstname,
+  //         surname: lastname,
+  //         displayName: displayName
+  //       };
+  //       console.log('handleClientWebhook:have result', result);
+  //       return result;
+  //     })
+  //     .then(payload => {
+  //       console.log('handleClientWebhook.writingEvent');
+  //       return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload).save();
+  //     })
+  //     .catch(error => {
+  //       console.log('ERROR1', error);
+  //       throw error;
+  //     });
+  //   // .catch(error => {
+  //   //   console.log(error);
+  //   //   if (!error) {
+  //   //     console.log('handleClientWebhook NULL error mesage ... succeed');
+  //   //     return;
+  //   //   } else {
+  //   //     throw error;
+  //   //   }
+  //   // });
+  // }
 
   function handleSavingsAccountWebhook(isTransaction) {
     console.log('handleSavingsAccountWebhook.body', body);
