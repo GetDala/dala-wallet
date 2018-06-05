@@ -46,10 +46,10 @@ module.exports.onFineractWebhookEvent = (event, context) => {
           console.log('ERROR', error);
           return reject(error);
         }
-        return resolve(null, event);
+        return resolve(event);
       }
     );
-  });
+  }).then(context.succeed).catch(context.fail);
 };
 
 // var promises = event.Records.map(record => {
