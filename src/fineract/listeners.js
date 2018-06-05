@@ -37,7 +37,8 @@ module.exports.onFineractWebhookEvent = (event, context) => {
         if (error) return reject(error);
         return resolve(null, event);
     });
-});
+  });
+}
 
   // var promises = event.Records.map(record => {
   //   if (record.eventName !== 'INSERT') return Promise.resolve(null);
