@@ -26,6 +26,9 @@ const api = require('./api');
 const savings = api.savings();
 const clients = api.clients();
 const transfers = api.accounttransfers();
+const secretsClient = require('serverless-secrets/client');
+const secretsPromise = secretsClient.load();
+const Sequelize = require('sequelize');
 
 module.exports.onFineractWebhookEvent = (event, context) => {
   return new Promise((resolve, reject) => {
@@ -165,17 +168,92 @@ const onWebhook = event => {
     // });
   }
 
+  function getClient(id) {
+    return secretsPromise.then(() => {
+      const databaseAddress = `mysql://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
+        process.env.DALA_STORAGE_CLUSTER
+      }:${process.env.DALA_STORAGE_PORT}/mifostenant-default`;
+      const sequelize = new Sequelize(databaseAddress, {
+        operatorsAliases: false
+      });
+      return sequelize.query(`SELECT * FROM m_client WHERE id = ${id}`).then(rows => {
+        console.log(rows);
+        let client = rows[0][0];
+        return {
+          externalId: client.external_id
+        };
+      });
+    });
+  }
+
+  function getSavingsAccount(id) {
+    return secretsPromise.then(() => {
+      const databaseAddress = `mysql://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
+        process.env.DALA_STORAGE_CLUSTER
+      }:${process.env.DALA_STORAGE_PORT}/mifostenant-default`;
+      const sequelize = new Sequelize(databaseAddress, {
+        operatorsAliases: false
+      });
+      return sequelize.query(`SELECT * FROM m_savings_account WHERE id = ${id}`).then(rows => {
+        console.log(rows);
+        let account = rows[0][0];
+        return {
+          externalId: account.external_id,
+          summary: {
+            accountBalance: account.account_balance_derived
+          }
+        };
+      });
+    });
+  }
+
+  function getTransfer(id){
+    return secretsPromise.then(() => {
+      const databaseAddress = `mysql://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
+        process.env.DALA_STORAGE_CLUSTER
+      }:${process.env.DALA_STORAGE_PORT}/mifostenant-default`;
+      const sequelize = new Sequelize(databaseAddress, {
+        operatorsAliases: false
+      });
+      return sequelize.query(`select att.transaction_date, att.amount, att.description, sourceAccount.id as fromAccountId, sourceAccount.client_id as fromClientId, targetAccount.id as toAccountId, targetAccount.client_id as toClientId from m_account_transfer_transaction att \
+      left outer join m_savings_account_transaction source on source.id = att.from_savings_transaction_id \
+      left outer join m_savings_account sourceAccount on source.savings_account_id = sourceAccount.id \
+      left outer join m_savings_account_transaction target on target.id = att.to_savings_transaction_id \
+      left outer join m_savings_account targetAccount on target.savings_account_id = targetAccount.id \
+      where att.id = ${id}`).then(rows => {
+        console.log(rows);
+        let transfer = rows[0][0];
+        return {
+          transferDate: transfer.transcation_date.split('-'),
+          amount: transfer.amount,
+          description: transfer.description,
+          fromClient:{
+            id: transfer.fromClientId
+          },
+          fromAccount:{
+            id: transfer.fromAccountId
+          },
+          toClient: {
+            id: transfer.toClientId
+          },
+          toAccount: {
+            id: transfer.toAccountId
+          }
+        };
+      });
+    });
+  }
+
   function handleAccountTransferWebhook() {
     console.log('handleAccountTransferWebhook.body', body);
-    return transfers
-      .get(body.resourceId)
+    return getTransfer(body.resourceId)
       .then(transfer => {
         console.log(JSON.stringify(transfer));
         return Promise.all([
-          clients.get(transfer.fromClient.id),
-          clients.get(transfer.toClient.id),
-          savings.get(transfer.fromAccount.id),
-          savings.get(transfer.toAccount.id)
+          getClient(transfer.fromClient.id),
+          getClient(transfer.toClient.id),
+          getSavingsAccount(transfer.fromAccount.id),
+          getSavingsAccount(transfer.toAccount.id)
         ])
           .then(([fromClient, toClient, fromAccount, toAccount]) => {
             console.log('handleAccountTransferWebhook:have fromClient, toClient, fromAccount, toAccount');
