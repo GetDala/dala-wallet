@@ -92,7 +92,7 @@ const onWebhook = event => {
       })
       .catch(error => {
         console.log(error);
-        if (error && error.errorMessage == null) {
+        if (!error) {
           console.log('handleClientWebhook NULL error mesage ... succeed');
           return;
         } else {
@@ -127,7 +127,7 @@ const onWebhook = event => {
       })
       .catch(error => {
         console.log(error);
-        if (error && error.errorMessage == null) {
+        if (!error) {
           console.log('handleSavingsAccountWebhook: NULL error mesage ... succeed');
           return;
         } else {
@@ -175,7 +175,7 @@ const onWebhook = event => {
       })
       .catch(error => {
         console.log(error);
-        if (error && error.errorMessage == null) {
+        if (!error) {
           console.log('handleAccountTransferWebhook NULL error mesage ... succeed');
           return;
         } else {
