@@ -35,8 +35,9 @@ module.exports.onFineractWebhookEvent = (event, context) => {
   return Promise.all(promises)
     .then(() => context.succeed(event))
     .catch(error => {
-      console.log(error);
-      console.log(JSON.stringify(error));
+      console.log('ERROR', error);
+      console.log('ERROR.JSON', JSON.stringify(error));
+
       return context.fail(error);
     });
 };
@@ -88,6 +89,15 @@ const onWebhook = event => {
       })
       .then(payload => {
         return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload).save();
+      })
+      .catch(error => {
+        console.log(error);
+        if (error && error.errorMessage == null) {
+          console.log('handleClientWebhook NULL error mesage ... succeed');
+          return;
+        } else {
+          throw error;
+        }
       });
   }
 
@@ -114,6 +124,15 @@ const onWebhook = event => {
       })
       .then(payload => {
         return new DalaWalletEvent(payload.accountId, EventTypes.WebhookReceived, payload).save();
+      })
+      .catch(error => {
+        console.log(error);
+        if (error && error.errorMessage == null) {
+          console.log('handleSavingsAccountWebhook: NULL error mesage ... succeed');
+          return;
+        } else {
+          throw error;
+        }
       });
   }
 
@@ -153,6 +172,15 @@ const onWebhook = event => {
       })
       .then(payload => {
         return new DalaWalletEvent(`${payload.from.address}:${payload.to.address}`, EventTypes.WebhookReceived, payload).save();
+      })
+      .catch(error => {
+        console.log(error);
+        if (error && error.errorMessage == null) {
+          console.log('handleAccountTransferWebhook NULL error mesage ... succeed');
+          return;
+        } else {
+          throw error;
+        }
       });
   }
 };
