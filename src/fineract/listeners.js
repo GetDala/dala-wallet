@@ -29,30 +29,36 @@ const transfers = api.accounttransfers();
 
 module.exports.onFineractWebhookEvent = (event, context) => {
   return new Promise((resolve, reject) => {
-    async.each(event.Records, (record, done) => {
+    async.each(
+      event.Records,
+      (record, done) => {
         if (record.eventName !== 'INSERT') return done();
         const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
-        onWebhook(newItem.payload).then(done).catch(done);
-    }, (error, results) => {
+        onWebhook(newItem.payload)
+          .then(done)
+          .catch(done);
+      },
+      (error, results) => {
         if (error) return reject(error);
         return resolve(null, event);
-    });
+      }
+    );
   });
-}
+};
 
-  // var promises = event.Records.map(record => {
-  //   if (record.eventName !== 'INSERT') return Promise.resolve(null);
-  //   const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
-  //   return onWebhook(newItem.payload);
-  // });
-  // return Promise.all(promises)
-  //   .then(() => context.succeed(event))
-  //   .catch(error => {
-  //     console.log('ERROR', error);
-  //     console.log('ERROR.JSON', JSON.stringify(error));
+// var promises = event.Records.map(record => {
+//   if (record.eventName !== 'INSERT') return Promise.resolve(null);
+//   const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
+//   return onWebhook(newItem.payload);
+// });
+// return Promise.all(promises)
+//   .then(() => context.succeed(event))
+//   .catch(error => {
+//     console.log('ERROR', error);
+//     console.log('ERROR.JSON', JSON.stringify(error));
 
-  //     return context.fail(error);
-    // });
+//     return context.fail(error);
+// });
 // };
 
 const onWebhook = event => {
@@ -107,16 +113,16 @@ const onWebhook = event => {
       .then(payload => {
         console.log('handleClientWebhook.writingEvent');
         return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload).save();
-      })
-      // .catch(error => {
-      //   console.log(error);
-      //   if (!error) {
-      //     console.log('handleClientWebhook NULL error mesage ... succeed');
-      //     return;
-      //   } else {
-      //     throw error;
-      //   }
-      // });
+      });
+    // .catch(error => {
+    //   console.log(error);
+    //   if (!error) {
+    //     console.log('handleClientWebhook NULL error mesage ... succeed');
+    //     return;
+    //   } else {
+    //     throw error;
+    //   }
+    // });
   }
 
   function handleSavingsAccountWebhook(isTransaction) {
@@ -147,16 +153,16 @@ const onWebhook = event => {
       .then(payload => {
         console.log('handleSavingsAccountWebhook.writingEvent');
         return new DalaWalletEvent(payload.accountId, EventTypes.WebhookReceived, payload).save();
-      })
-      // .catch(error => {
-      //   console.log(error);
-      //   if (!error) {
-      //     console.log('handleSavingsAccountWebhook: NULL error mesage ... succeed');
-      //     return;
-      //   } else {
-      //     throw error;
-      //   }
-      // });
+      });
+    // .catch(error => {
+    //   console.log(error);
+    //   if (!error) {
+    //     console.log('handleSavingsAccountWebhook: NULL error mesage ... succeed');
+    //     return;
+    //   } else {
+    //     throw error;
+    //   }
+    // });
   }
 
   function handleAccountTransferWebhook() {
@@ -170,45 +176,50 @@ const onWebhook = event => {
           clients.get(transfer.toClient.id),
           savings.get(transfer.fromAccount.id),
           savings.get(transfer.toAccount.id)
-        ]).then(([fromClient, toClient, fromAccount, toAccount]) => {
-          console.log('handleAccountTransferWebhook:have fromClient, toClient, fromAccount, toAccount');
-          let result = {
-            eventType: getEventType(`${entity}:${action}`),
-            transactionId: body.resourceId,
-            from: {
-              address: fromAccount.externalId,
-              username: fromClient.externalId,
-              balance: fromAccount.summary.accountBalance
-            },
-            to: {
-              address: toAccount.externalId,
-              username: toClient.externalId,
-              balance: toAccount.summary.accountBalance
-            },
-            amount: transfer.transferAmount,
-            date: {
-              year: transfer.transferDate[0],
-              month: transfer.transferDate[1],
-              day: transfer.transferDate[2]
-            },
-            description: transfer.transferDescription
-          };
-          console.log('handleAccountTransferWebhook:have result', result);
-          return result;
-        });
+        ])
+          .then(([fromClient, toClient, fromAccount, toAccount]) => {
+            console.log('handleAccountTransferWebhook:have fromClient, toClient, fromAccount, toAccount');
+            let result = {
+              eventType: getEventType(`${entity}:${action}`),
+              transactionId: body.resourceId,
+              from: {
+                address: fromAccount.externalId,
+                username: fromClient.externalId,
+                balance: fromAccount.summary.accountBalance
+              },
+              to: {
+                address: toAccount.externalId,
+                username: toClient.externalId,
+                balance: toAccount.summary.accountBalance
+              },
+              amount: transfer.transferAmount,
+              date: {
+                year: transfer.transferDate[0],
+                month: transfer.transferDate[1],
+                day: transfer.transferDate[2]
+              },
+              description: transfer.transferDescription
+            };
+            console.log('handleAccountTransferWebhook:have result', result);
+            return result;
+          })
+          .catch(error => {
+            console.log('handleAccountTransferWebhook.ERROR', error);
+            throw error;
+          });
       })
       .then(payload => {
         console.log('handleAccountTransferWebhook.writingEvent');
         return new DalaWalletEvent(`${payload.from.address}:${payload.to.address}`, EventTypes.WebhookReceived, payload).save();
-      })
-      // .catch(error => {
-      //   console.log(error);
-      //   if (!error) {
-      //     console.log('handleAccountTransferWebhook NULL error mesage ... succeed');
-      //     return;
-      //   } else {
-      //     throw error;
-      //   }
-      // });
+      });
+    // .catch(error => {
+    //   console.log(error);
+    //   if (!error) {
+    //     console.log('handleAccountTransferWebhook NULL error mesage ... succeed');
+    //     return;
+    //   } else {
+    //     throw error;
+    //   }
+    // });
   }
 };
