@@ -138,9 +138,9 @@ const onWebhook = event => {
   function handleSavingsAccountWebhook(isTransaction) {
     console.log('handleSavingsAccountWebhook.body', body);
     return Promise.all([
-      clients.get(body.clientId),
-      savings.get(body.savingsId),
-      isTransaction ? savings.getTransaction(body.savingsId, body.resourceId) : Promise.resolve(null)
+      getClient(body.clientId),
+      getSavingsAccount(body.savingsId),
+      isTransaction ? getTransaction(body.savingsId, body.resourceId) : Promise.resolve(null)
     ])
       .then(([client, savings, transaction]) => {
         console.log('handleSavingsAccountWebhook:have client, savings, transactions');
@@ -168,15 +168,6 @@ const onWebhook = event => {
         console.log('ERROR2', error);
         throw error;
       });
-    // .catch(error => {
-    //   console.log(error);
-    //   if (!error) {
-    //     console.log('handleSavingsAccountWebhook: NULL error mesage ... succeed');
-    //     return;
-    //   } else {
-    //     throw error;
-    //   }
-    // });
   }
 
   function getClient(id) {
@@ -192,6 +183,26 @@ const onWebhook = event => {
         let client = rows[0][0];
         return {
           externalId: client.external_id
+        };
+      });
+    });
+  }
+
+  function getTransaction(savingsId, resourceId) {
+    return secretsPromise.then(() => {
+      const databaseAddress = `mysql://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
+        process.env.DALA_STORAGE_CLUSTER
+      }:${process.env.DALA_STORAGE_PORT}/mifostenant-default`;
+      const sequelize = new Sequelize(databaseAddress, {
+        operatorsAliases: false
+      });
+      return sequelize.query(`SELECT * FROM m_savings_account_transaction WHERE id = ${resourceId} and savings_account_id = ${savingsId}`).then(rows => {
+        console.log(rows);
+        let transaction = rows[0][0];
+        return {
+          id: transaction.id,
+          amount: transaction.amount,
+          date: transaction.transaction_date.split('-')
         };
       });
     });
