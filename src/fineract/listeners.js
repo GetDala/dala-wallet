@@ -38,11 +38,14 @@ module.exports.onFineractWebhookEvent = (event, context) => {
         if (record.eventName !== 'INSERT') return done();
         const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
         onWebhook(newItem.payload)
-          .then(done)
+          .then(result => done(null, result))
           .catch(done);
       },
-      (error, results) => {
-        if (error) return reject(error);
+      (error) => {
+        if (error) {
+          console.log('ERROR', error);
+          return reject(error);
+        }
         return resolve(null, event);
       }
     );
@@ -116,6 +119,10 @@ const onWebhook = event => {
       .then(payload => {
         console.log('handleClientWebhook.writingEvent');
         return new DalaWalletEvent(payload.username, EventTypes.WebhookReceived, payload).save();
+      })
+      .catch(error => {
+        console.log('ERROR1', error);
+        throw error;
       });
     // .catch(error => {
     //   console.log(error);
@@ -156,6 +163,10 @@ const onWebhook = event => {
       .then(payload => {
         console.log('handleSavingsAccountWebhook.writingEvent');
         return new DalaWalletEvent(payload.accountId, EventTypes.WebhookReceived, payload).save();
+      })
+      .catch(error => {
+        console.log('ERROR2', error);
+        throw error;
       });
     // .catch(error => {
     //   console.log(error);
@@ -207,7 +218,7 @@ const onWebhook = event => {
     });
   }
 
-  function getTransfer(id){
+  function getTransfer(id) {
     return secretsPromise.then(() => {
       const databaseAddress = `mysql://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${
         process.env.DALA_STORAGE_CLUSTER
@@ -215,33 +226,37 @@ const onWebhook = event => {
       const sequelize = new Sequelize(databaseAddress, {
         operatorsAliases: false
       });
-      return sequelize.query(`select att.transaction_date, att.amount, att.description, sourceAccount.id as fromAccountId, sourceAccount.client_id as fromClientId, targetAccount.id as toAccountId, targetAccount.client_id as toClientId from m_account_transfer_transaction att \
+      return sequelize
+        .query(
+          `select att.transaction_date, att.amount, att.description, sourceAccount.id as fromAccountId, sourceAccount.client_id as fromClientId, targetAccount.id as toAccountId, targetAccount.client_id as toClientId from m_account_transfer_transaction att \
       left outer join m_savings_account_transaction source on source.id = att.from_savings_transaction_id \
       left outer join m_savings_account sourceAccount on source.savings_account_id = sourceAccount.id \
       left outer join m_savings_account_transaction target on target.id = att.to_savings_transaction_id \
       left outer join m_savings_account targetAccount on target.savings_account_id = targetAccount.id \
-      where att.id = ${id}`).then(rows => {
-        console.log(rows);
-        let transfer = rows[0][0];
-        console.log(transfer);
-        return {
-          transferDate: transfer.transaction_date.split('-'),
-          amount: transfer.amount,
-          description: transfer.description,
-          fromClient:{
-            id: transfer.fromClientId
-          },
-          fromAccount:{
-            id: transfer.fromAccountId
-          },
-          toClient: {
-            id: transfer.toClientId
-          },
-          toAccount: {
-            id: transfer.toAccountId
-          }
-        };
-      });
+      where att.id = ${id}`
+        )
+        .then(rows => {
+          console.log(rows);
+          let transfer = rows[0][0];
+          console.log(transfer);
+          return {
+            transferDate: transfer.transaction_date.split('-'),
+            amount: transfer.amount,
+            description: transfer.description,
+            fromClient: {
+              id: transfer.fromClientId
+            },
+            fromAccount: {
+              id: transfer.fromAccountId
+            },
+            toClient: {
+              id: transfer.toClientId
+            },
+            toAccount: {
+              id: transfer.toAccountId
+            }
+          };
+        });
     });
   }
 
@@ -288,11 +303,15 @@ const onWebhook = event => {
           });
       })
       .then(payload => {
-        console.log('handleAccountTransferWebhook.writingEvent');
+        console.log('handleAccountTransferWebhook.writingEvent', payload);
         return new DalaWalletEvent(`${payload.from.address}:${payload.to.address}`, EventTypes.WebhookReceived, payload).save();
+      })
+      .catch(error => {
+        console.log('ERROR3', error);
+        throw error;
       });
     // .catch(error => {
-    //   console.log(error);
+    //   console.log(error);``
     //   if (!error) {
     //     console.log('handleAccountTransferWebhook NULL error mesage ... succeed');
     //     return;
