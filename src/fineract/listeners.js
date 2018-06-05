@@ -223,8 +223,9 @@ const onWebhook = event => {
       where att.id = ${id}`).then(rows => {
         console.log(rows);
         let transfer = rows[0][0];
+        console.log(transfer);
         return {
-          transferDate: transfer.transcation_date.split('-'),
+          transferDate: transfer.transaction_date.split('-'),
           amount: transfer.amount,
           description: transfer.description,
           fromClient:{
