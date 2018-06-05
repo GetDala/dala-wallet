@@ -7,7 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "@raiden_network/microraiden": "^0.2.0",
-    "async": "^2.6.0",
+    "async": "^2.6.1",
     "aws-sdk": "^2.201.0",
     "big.js": "^5.0.3",
     "bunyan": "^1.8.12",

@@ -18,6 +18,7 @@ function getEventType(event) {
   return result || event;
 }
 
+const async = require('async');
 const AWS = require('aws-sdk');
 const { EventTypes } = require('../common/constants');
 const DalaWalletEvent = require('../model/DalaWalletEvent');
@@ -27,20 +28,31 @@ const clients = api.clients();
 const transfers = api.accounttransfers();
 
 module.exports.onFineractWebhookEvent = (event, context) => {
-  var promises = event.Records.map(record => {
-    if (record.eventName !== 'INSERT') return Promise.resolve(null);
-    const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
-    return onWebhook(newItem.payload);
-  });
-  return Promise.all(promises)
-    .then(() => context.succeed(event))
-    .catch(error => {
-      console.log('ERROR', error);
-      console.log('ERROR.JSON', JSON.stringify(error));
-
-      return context.fail(error);
+  return new Promise((resolve, reject) => {
+    async.each(event.Records, (record, done) => {
+        if (record.eventName !== 'INSERT') return done();
+        const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
+        onWebhook(newItem.payload).then(done).catch(done);
+    }, (error, results) => {
+        if (error) return reject(error);
+        return resolve(null, event);
     });
-};
+});
+
+  // var promises = event.Records.map(record => {
+  //   if (record.eventName !== 'INSERT') return Promise.resolve(null);
+  //   const newItem = AWS.DynamoDB.Converter.unmarshall(record.dynamodb.NewImage);
+  //   return onWebhook(newItem.payload);
+  // });
+  // return Promise.all(promises)
+  //   .then(() => context.succeed(event))
+  //   .catch(error => {
+  //     console.log('ERROR', error);
+  //     console.log('ERROR.JSON', JSON.stringify(error));
+
+  //     return context.fail(error);
+    // });
+// };
 
 const onWebhook = event => {
   console.log(JSON.stringify(event));
