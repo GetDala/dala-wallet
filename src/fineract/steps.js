@@ -117,7 +117,9 @@ module.exports.approveAccount = (event, context) => {
   return getSavingsAccount(address)
     .then(approve)
     .then(context.succeed)
-    .catch(error => {
+    .catch(apiError => {
+      console.log(apiError);
+      let error = apiError.body;
       console.log(JSON.stringify(error));
       console.log(JSON.stringify(error));
       if (error.errors && error.errors.length) {
@@ -151,7 +153,9 @@ module.exports.activateAccount = (event, context) => {
   return getSavingsAccount(address)
     .then(activate)
     .then(context.succeed)
-    .catch(error => {
+    .catch(apiError => {
+      console.log(apiError);
+      let error = apiError.body;
       console.log(JSON.stringify(error));
       if (error.errors && error.errors.length) {
         if (
