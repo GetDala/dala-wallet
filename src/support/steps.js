@@ -27,7 +27,8 @@ exports.rewriteActivatedAccountWebhookEvents = async event => {
             where msa.status_enum = 300 \
             order by clientId desc
             limit ${offset}, ${limit}`;
-  let results = await sequelize.query(query)[0];
+  let results = await sequelize.query(query);
+  console.log(results);
   if(!results.length) throw new NoMoreDataError();
   let batchPutResult = await documentClient.batchWrite({
     RequestItems: {
