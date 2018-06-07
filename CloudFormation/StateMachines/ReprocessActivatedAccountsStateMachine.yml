@@ -28,4 +28,4 @@ StateMachine:
           }
         }
       }
-    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 
+    RoleArn: { "Fn::GetAtt": ["DalaWalletSupportStateMachineExecutionRole", "Arn"] } 

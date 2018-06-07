@@ -56,4 +56,5 @@ resources:
       Value:
         Ref: ReprocessActivatedAccountsStateMachine
   Resources:
+    DalaWalletSupportStateMachineExecutionRole: ${file(./CloudFormation/IAM/DalaWalletSupportStateMachineExecutionRole.yml):Role}
     ReprocessActivatedAccountsStateMachine: ${file(./CloudFormation/StateMachines/ReprocessActivatedAccountsStateMachine.yml):StateMachine}
