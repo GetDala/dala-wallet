@@ -34,7 +34,7 @@ exports.rewriteActivatedAccountWebhookEvents = async event => {
     RequestItems: {
       FineractWebhookEvents: results.map(createPutRequests)
     }
-  });
+  }).promise();
   console.log(batchPutResult);
   if (batchPutResult.UnprocessedItems && batchPutResult.PutRequest.length) {
     //some items didn't process - rather process the whole batch again
