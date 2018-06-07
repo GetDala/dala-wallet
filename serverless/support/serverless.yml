@@ -1,0 +1,59 @@
+service: dala-wallet-support
+package:
+  exclude:
+    - env/**
+    - microraiden/**
+    - dala_proxy.db*
+    - private-key
+    - secret.js
+    - truffle.js
+  include:
+    - src/support/**
+
+provider:
+  name: aws
+  stage: ${opt:stage, self:custom.defaultStage}
+  profile: ${opt:profile}
+  region: eu-west-1
+  runtime: nodejs8.10
+  vpc:
+    securityGroupIds: 
+      - Fn::ImportValue: dala-infrastructure-DalaInstanceSecurityGroupId
+    subnetIds:
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetAId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetBId
+      - Fn::ImportValue: dala-infrastructure-PrivateSubnetCId
+  environment:
+    DALA_STORAGE_USERNAME: ${ssm:/dala-storage/${self:provider.stage}/username}
+    DALA_STORAGE_CLUSTER: ${ssm:/dala-storage/${self:provider.stage}/cluster}
+    DALA_STORAGE_PORT: ${ssm:/dala-storage/${self:provider.stage}/port}
+  environmentSecrets:
+    DALA_STORAGE_PASSWORD: '/dala-storage/${self:provider.stage}/password'
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - states:StartExecution
+      Resource:
+        - ${self:resources.Outputs.ReprocessActivatedAccountsStateMachineArn.Value}
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+      Resource:
+        - arn:aws:dynamodb:${self:provider.region}:${env:AWS_ACCOUNT_ID}:table/FineractWebhookEvents
+
+functions:
+  rewriteActivatedAccountWebhookEvents:
+    handler: src/support/steps.rewriteActivatedAccountWebhookEvents      
+
+resources:
+  Outputs:
+    ReprocessActivatedAccountsStateMachineArn:
+      Value:
+        Ref: ReprocessActivatedAccountsStateMachine
+  Resources:
+    ReprocessActivatedAccountsStateMachine: ${file(./CloudFormation/StateMachines/ReprocessActivatedAccountsStateMachine.yml):StateMachine}

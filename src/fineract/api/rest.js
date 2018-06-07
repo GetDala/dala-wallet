@@ -3,6 +3,16 @@
 const _ = require('lodash');
 const request = require('request');
 
+class ApiError extends Error {
+  constructor(statusCode, statusMessage, body) {
+    super(`${statusCode}:${statusMessage}`);
+    this.statusCode = statusCode;
+    this.statusMessage = statusMessage;
+    this.body = body;
+    this.name = 'ApiError';
+  }
+}
+
 module.exports = {
   get: (path, params) => {
     const urlPath = process.env.FINERACT_API_ENDPOINT_BASE;
@@ -18,7 +28,7 @@ module.exports = {
           if (error) return reject(error);
           const json = body;
           if (response.statusCode >= 300 || (json.status && json.status >= 300) || (json.httpStatusCode && json.httpStatusCode >= 300))
-            return reject(new Error(`${response.statusCode}:${response.statusMessage}`));
+            return reject(new ApiError(response.statusCode, response.statusMessage, body));
           return resolve(json);
         }
       );
@@ -41,7 +51,7 @@ module.exports = {
           console.log(body);
           const json = body;
           if (response.statusCode >= 300 || (json.status && json.status >= 300) || (json.httpStatusCode && json.httpStatusCode >= 300))
-            return reject(new Error(`${response.statusCode}:${response.statusMessage}`));
+            return reject(new ApiError(response.statusCode, response.statusMessage, body));
           return resolve(json);
         }
       );
@@ -64,7 +74,7 @@ module.exports = {
           console.log(body);
           const json = body;
           if (response.statusCode >= 300 || (json.status && json.status >= 300) || (json.httpStatusCode && json.httpStatusCode >= 300))
-            return reject(new Error(`${response.statusCode}:${response.statusMessage}`));
+            return reject(new ApiError(response.statusCode, response.statusMessage, body));
           return resolve(json);
         }
       );
@@ -86,7 +96,7 @@ module.exports = {
           if (error) return reject(error);
           const json = body;
           if (response.statusCode >= 300 || (json.status && json.status >= 300) || (json.httpStatusCode && json.httpStatusCode >= 300))
-            return reject(new Error(`${response.statusCode}:${response.statusMessage}`));
+            return reject(new ApiError(response.statusCode, response.statusMessage, body));
           return resolve(json);
         }
       );

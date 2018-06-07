@@ -1,0 +1,31 @@
+StateMachine:
+  Type: AWS::StepFunctions::StateMachine
+  Properties:
+    DefinitionString: |-
+      {
+        "StartAt":"Get Activated Account Batch",
+        "States":{
+          "Get Activated Account Batch":{
+            "Type":"Task",
+            "Resource":"arn:aws:lambda:${self:provider.region}:${env:AWS_ACCOUNT_ID}:function:dala-wallet-support-${self:provider.stage}-rewriteActivatedAccountWebhookEvents",
+            "Next":"Wait",
+            "Catch":[
+              {
+                "ErrorEquals":["NoMoreDataError"],
+                "ResultPath":"$.error",
+                "Next":"Finish"
+              }
+            ]
+          },
+          "Wait":{
+            "Type":"Wait",
+            "Seconds":1,
+            "Next":"Get Activated Account Batch"
+          },
+          "Finish":{
+            "Type":"Pass",
+            "End":true
+          }
+        }
+      }
+    RoleArn: { "Fn::GetAtt": ["DalaWalletStateMachineExecutionRole", "Arn"] } 

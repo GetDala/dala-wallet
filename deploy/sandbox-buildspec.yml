@@ -24,6 +24,8 @@ phases:
       - serverless deploy --stage dev --profile sandbox
       - cp -f serverless/notifications/serverless.yml .
       - serverless deploy --stage dev --profile sandbox
+      - cp -f serverless/support/serverless.yml
+      - serverless deploy --stage dev --profile sandbox
   post_build:
     commands:
 artifacts:
