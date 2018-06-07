@@ -48,7 +48,15 @@ provider:
 
 functions:
   rewriteActivatedAccountWebhookEvents:
-    handler: src/support/steps.rewriteActivatedAccountWebhookEvents      
+    handler: src/support/steps.rewriteActivatedAccountWebhookEvents
+
+plugins:
+  - serverless-secrets
+
+custom:
+  serverlessSecrets:
+    providerOptions:
+      region: ${self:provider.region}      
 
 resources:
   Outputs:
