@@ -26,7 +26,7 @@ phases:
       - serverless deploy --stage ropsten --profile ropsten
       - cp -f serverless/logging/serverless.yml .
       - serverless deploy --stage ropsten --profile ropsten
-      - cp -f serverless/support/serverless.yml
+      - cp -f serverless/support/serverless.yml .
       - serverless deploy --stage ropsten --profile ropsten
   post_build:
     commands:

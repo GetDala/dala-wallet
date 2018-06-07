@@ -26,7 +26,7 @@ phases:
       - serverless deploy --stage mainnet --profile mainnet
       - cp -f serverless/logging/serverless.yml .
       - serverless deploy --stage mainnet --profile mainnet
-      - cp -f serverless/support/serverless.yml
+      - cp -f serverless/support/serverless.yml .
       - serverless deploy --stage mainnet --profile mainnet
   post_build:
     commands:
