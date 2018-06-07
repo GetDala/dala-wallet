@@ -48,6 +48,7 @@ provider:
 
 functions:
   rewriteActivatedAccountWebhookEvents:
+    timeout: 30
     handler: src/support/steps.rewriteActivatedAccountWebhookEvents
 
 plugins:
