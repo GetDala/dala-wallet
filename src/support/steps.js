@@ -3,7 +3,6 @@ const documentClient = new AWS.DynamoDB.DocumentClient();
 const Sequelize = require('sequelize');
 const secretsClient = require('serverless-secrets/client');
 const secretsPromise = secretsClient.load();
-let sequelize;
 
 class NoMoreDataError extends Error {
   constructor() {
@@ -20,11 +19,9 @@ exports.rewriteActivatedAccountWebhookEvents = async event => {
   const databaseAddress = `mysql://${process.env.DALA_STORAGE_USERNAME}:${process.env.DALA_STORAGE_PASSWORD}@${process.env.DALA_STORAGE_CLUSTER}:${
     process.env.DALA_STORAGE_PORT
   }/mifostenant-default`;
-  if (!sequelize) {
-    sequelize = new Sequelize(databaseAddress, {
-      operatorsAliases: false
-    });
-  }
+  const sequelize = new Sequelize(databaseAddress, {
+    operatorsAliases: false
+  });
   let query = `select mc.id as clientId, mc.office_id as officeId, msa.id as resourceId, msa.id as savingsId, msa.activatedon_date from m_savings_account msa \
             join m_client mc on msa.client_id = mc.id \
             where msa.status_enum = 300 \
