@@ -36,7 +36,7 @@ exports.rewriteActivatedAccountWebhookEvents = async event => {
     }
   }).promise();
   console.log(batchPutResult);
-  if (batchPutResult.UnprocessedItems && batchPutResult.PutRequest.length) {
+  if (batchPutResult.UnprocessedItems && batchPutResult.UnprocessedItems.PutRequest && batchPutResult.UnprocessedItems.PutRequest.length) {
     //some items didn't process - rather process the whole batch again
     return { offset, limit };
   }
