@@ -45,10 +45,11 @@ exports.rewriteActivatedAccountWebhookEvents = async event => {
 };
 
 function createPutRequests(item) {
+  console.log('item', item);
   return {
     PutRequest: {
       Item: {
-        entityId: item.clientId,
+        entityId: `${item.clientId}`,
         timestamp: new Date(item.activatedon_date).toISOString(),
         payload: {
           action: 'ACTIVATE',
