@@ -112,7 +112,7 @@ StateMachine:
                 "Next": "Failed"
               }
             ],
-            "Next":"Transfer"
+            "Next":"Complete"
           },
           "Wait":{
             "Type":"Wait",
